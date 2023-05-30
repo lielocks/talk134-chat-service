@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @SpringBootTest
 @Transactional(readOnly = true)
+@ActiveProfiles(profiles = "test")
 public class ChatRoomServiceTest {
 	@Autowired
 	private ChatRoomService chatRoomService;

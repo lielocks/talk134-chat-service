@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.joda.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
@@ -14,7 +13,6 @@ import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
-import kr.co.talk.domain.chatroom.scheduler.ChatroomTimeoutScheduler;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.global.constants.RedisConstants;
@@ -126,8 +124,4 @@ public class ChatRoomService {
         redisService.pushNoticeList(RedisConstants.ROOM_NOTICE, chatroomNoticeDto);
     }
 
-//    @Transactional
-//    public void updateTimeout(String teamCode, long timeout) {
-//        chatroomRepository.updateTimeout(teamCode, timeout);
-//    }
 }

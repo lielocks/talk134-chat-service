@@ -1,13 +1,9 @@
 package kr.co.talk.domain.chatroom.scheduler;
 
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
-import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

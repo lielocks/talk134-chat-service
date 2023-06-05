@@ -12,6 +12,7 @@ then
   echo "Process is not running"
 else
 kill -15 $PID
+tail --pid=$PID -f /dev/null
 fi
 
 echo "start~"

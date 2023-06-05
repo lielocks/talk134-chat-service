@@ -4,10 +4,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -28,18 +30,18 @@ import lombok.extern.slf4j.Slf4j;
 public class RedisService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplate<String, String> redisTemplate;
-    private final RedisTemplate<String, ChatroomNoticeDto> chatroomNoticeDtoRedisTemplate;
+    private final RedisTemplate<String, String> chatroomNoticeDtoRedisTemplate;
     private final ObjectMapper objectMapper;
 
     private ValueOperations<String, String> valueOps;
     private ListOperations<String, String> opsForList;
-    private ListOperations<String, ChatroomNoticeDto> opsForNoticeList;
+    private HashOperations<String, String, String> opsForNoticeMap;
 
     @PostConstruct
     public void init() {
         valueOps = stringRedisTemplate.opsForValue();
         opsForList = redisTemplate.opsForList();
-        opsForNoticeList = chatroomNoticeDtoRedisTemplate.opsForList();
+        opsForNoticeMap = chatroomNoticeDtoRedisTemplate.opsForHash();
     }
 
     /**
@@ -94,16 +96,35 @@ public class RedisService {
     }
 
     /**
-     * 채팅방이 생성될때 redis에 저장
+     * 채팅방이 생성될때 redis에 저장 생성되고나서 5분전, 끝날때 알림
      * 
      * @param key
      * @param chatroomNoticeDto
      */
-    public void pushNoticeList(String key, ChatroomNoticeDto chatroomNoticeDto) {
-        opsForNoticeList.leftPush(key, chatroomNoticeDto);
+    public void pushNoticeMap(String roomId, ChatroomNoticeDto chatroomNoticeDto) {
+        try {
+            String writeValueAsString = objectMapper.writeValueAsString(chatroomNoticeDto);
+            opsForNoticeMap.put(RedisConstants.ROOM_NOTICE, roomId, writeValueAsString);
+        } catch (JsonProcessingException e) {
+            log.error("json parse error", e);
+            throw new RuntimeException(e);
+        }
     }
-    
-    public List<ChatroomNoticeDto> getChatroomNoticeList() {
-       return opsForNoticeList.range(RedisConstants.ROOM_NOTICE, 0, -1);
+
+    public Map<String, ChatroomNoticeDto> getChatroomNoticeEntry() {
+        Map<String, String> entries = opsForNoticeMap.entries(RedisConstants.ROOM_NOTICE);
+        return entries.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(),
+                e -> {
+                    try {
+                        return objectMapper.readValue(e.getValue(), ChatroomNoticeDto.class);
+                    } catch (JsonProcessingException e1) {
+                        log.error("json parse error", e);
+                    }
+                    return null;
+                }));
+    }
+
+    public void deleteChatroomNotice(String roomId) {
+        opsForNoticeMap.delete(RedisConstants.ROOM_NOTICE, roomId);
     }
 }

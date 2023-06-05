@@ -1,6 +1,7 @@
 package kr.co.talk.domain.chatroom.scheduler;
 
 import java.util.List;
+import java.util.Map;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
@@ -16,25 +17,38 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChatroomTimeoutScheduler {
     private final RedisService redisService;
-    
-    private static final long NOTICE_5MINUTE  = 1000 * 60 * 5; 
-    
+
+    private static final long NOTICE_5MINUTE = 1000 * 60 * 5;
+
     @Scheduled(fixedRate = 3000)
     public void scheduleNoticeTask() {
         log.debug("fixed rate task - {}", System.currentTimeMillis() / 1000);
-        
+
         // 채팅방 timeout check
-        List<ChatroomNoticeDto> chatroomNoticeList = redisService.getChatroomNoticeList();
-        
-        chatroomNoticeList.forEach(cn->{
-           if(System.currentTimeMillis() - cn.getCreateTime() <=  NOTICE_5MINUTE) {
-               // TODO 종료 5분전이면 socket으로 알림
-               log.info("채팅방 종료 5분전, CHAT ROOM ID ::", cn.getRoomId());
-           }else if(System.currentTimeMillis() - cn.getCreateTime() <=0) {
-               // TODO 채팅방 종료 알림 SOCKET
-               log.info("채팅방 종료 , CHAT ROOM ID ::", cn.getRoomId());
-           }
+        Map<String, ChatroomNoticeDto> chatroomNoticeEntry = redisService.getChatroomNoticeEntry();
+
+        log.info("현재 시간 :: " + System.currentTimeMillis());
+
+        chatroomNoticeEntry.entrySet().forEach(entry -> {
+            String roomId = entry.getKey();
+            ChatroomNoticeDto cn = entry.getValue();
+
+            log.info("createTime:::" + cn.getCreateTime());
+            if (cn.getCreateTime() + cn.getTimeout() > System.currentTimeMillis()
+                    && cn.getCreateTime() + cn.getTimeout() <= System.currentTimeMillis()
+                            + NOTICE_5MINUTE
+                    && !cn.isNotice()) {
+                // TODO 종료 5분전이면 socket으로 알림
+                log.info("채팅방 종료 5분전, CHAT ROOM ID ::", cn.getRoomId());
+                cn.setNotice(true); // 5분전 공지 flag
+                redisService.pushNoticeMap(roomId, cn);
+            } else if (cn.getCreateTime() + cn.getTimeout() <= System.currentTimeMillis()) {
+                // TODO 채팅방 종료 알림 SOCKET
+                log.info("채팅방 종료 , CHAT ROOM ID ::", cn.getRoomId());
+                redisService.deleteChatroomNotice(roomId);
+            }
         });
+
     }
-    
+
 }

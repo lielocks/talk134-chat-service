@@ -1,12 +1,6 @@
 package kr.co.talk.domain.chatroom.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import kr.co.talk.domain.chatroom.dto.ChatDto;
-import kr.co.talk.domain.chatroom.dto.ChatroomSendDto;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;

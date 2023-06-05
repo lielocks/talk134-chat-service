@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
 import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
+import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
@@ -37,9 +39,10 @@ public class ChatRoomService {
      * @param name
      * @return
      */
-    public List<ChatroomListDto> findChatRoomsByName(long userId, String teamCode, String name) {
-        // TODO User service에서 teamCode와 name으로 검색하려는 userId를 가져옴
-        List<Long> findUserIds = new ArrayList<>();
+    public List<ChatroomListDto> findChatRoomsByName(long userId, String teamCode,
+            List<UserIdResponseDto> userIdResponseDtos) {
+        List<Long> findUserIds = userIdResponseDtos.stream().map(dto -> dto.getUserId())
+                .collect(Collectors.toList());
         List<Chatroom> chatroomEntity =
                 chatroomRepository.findByTeamCodeAndName(teamCode, findUserIds);
         return convertChatRoomListDto(userId, chatroomEntity);
@@ -97,13 +100,12 @@ public class ChatRoomService {
     }
 
     @Transactional
-    public void createChatroom(String teamCode, List<Long> userList) {
-        // TODO User service에서 timeout 시간 알아옴
-        
-        
+    public void createChatroom(long createUserId,
+            CreateChatroomResponseDto requiredCreateChatroomInfo,
+            List<Long> userList) {
         Chatroom chatroom = Chatroom.builder()
-                .name("")
-                .teamCode(teamCode)
+                .name(requiredCreateChatroomInfo.getChatroomName())
+                .teamCode(requiredCreateChatroomInfo.getTeamCode())
                 .build();
 
         List<ChatroomUsers> chatroomUsers = userList.stream().map(userId -> {
@@ -113,15 +115,22 @@ public class ChatRoomService {
                     .build();
         }).collect(Collectors.toList());
 
+        // 채팅방 만든사람도 chatroomUsers에 포함되어야함
+        chatroomUsers.add(ChatroomUsers.builder()
+                .chatroom(chatroom)
+                .userId(createUserId)
+                .build());
+
         chatroomUsersRepository.saveAll(chatroomUsers);
-        
-        
+
+
         ChatroomNoticeDto chatroomNoticeDto = ChatroomNoticeDto.builder()
                 .roomId(chatroom.getChatroomId())
-                .timeout(1000)  // TODO timeout
+                .timeout(requiredCreateChatroomInfo.getTimeout())
                 .createTime(System.currentTimeMillis())
                 .build();
-        redisService.pushNoticeList(RedisConstants.ROOM_NOTICE, chatroomNoticeDto);
+
+        redisService.pushNoticeMap(String.valueOf(chatroom.getChatroomId()), chatroomNoticeDto);
     }
 
 }

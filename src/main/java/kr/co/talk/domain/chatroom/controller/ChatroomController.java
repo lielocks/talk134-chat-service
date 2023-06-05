@@ -1,6 +1,6 @@
 package kr.co.talk.domain.chatroom.controller;
 
-import kr.co.talk.global.client.UserClient;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -8,10 +8,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
 import kr.co.talk.domain.chatroom.service.ChatRoomService;
+import kr.co.talk.global.client.UserClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.util.List;
 
 @RestController
 @Slf4j
@@ -30,9 +32,9 @@ public class ChatroomController {
      * @return
      */
     @GetMapping("/find-chatrooms")
-    public ResponseEntity<?> findChatRooms(@RequestHeader(value = "userId") String userId) {
-        String teamCode = userClient.getTeamCode(Long.valueOf(userId));
-        return ResponseEntity.ok(chatRoomService.findChatRooms(Long.valueOf(userId), teamCode));
+    public ResponseEntity<?> findChatRooms(@RequestHeader(value = "userId") Long userId) {
+        String teamCode = userClient.getTeamCode(userId).getTeamCode();
+        return ResponseEntity.ok(chatRoomService.findChatRooms(userId, teamCode));
     }
 
     /**
@@ -44,11 +46,12 @@ public class ChatroomController {
      * @return
      */
     @GetMapping("/find-chatrooms-with-name")
-    public ResponseEntity<?> findChatRoomsWithName(@RequestHeader(value = "userId") String userId,
+    public ResponseEntity<?> findChatRoomsWithName(@RequestHeader(value = "userId") Long userId,
             String name) {
-        String teamCode = userClient.getTeamCode(Long.valueOf(userId));
+        String teamCode = userClient.getTeamCode(userId).getTeamCode();
+        List<UserIdResponseDto> userIdResponseDtos = userClient.getUserIdByName(name);
         return ResponseEntity
-                .ok(chatRoomService.findChatRoomsByName(Long.valueOf(userId), teamCode, name));
+                .ok(chatRoomService.findChatRoomsByName(userId, teamCode, userIdResponseDtos));
     }
 
     /**
@@ -59,10 +62,11 @@ public class ChatroomController {
      * @return
      */
     @PostMapping("/create-chatroom")
-    public ResponseEntity<?> createChatroom(@RequestHeader(value = "userId") String userId,
+    public ResponseEntity<?> createChatroom(@RequestHeader(value = "userId") Long userId,
             @RequestBody List<Long> userList) {
-        String teamCode = userClient.getTeamCode(Long.valueOf(userId));
-        chatRoomService.createChatroom(teamCode, userList);
+        CreateChatroomResponseDto requiredCreateChatroomInfo =
+                userClient.requiredCreateChatroomInfo(userId, userList);
+        chatRoomService.createChatroom(userId, requiredCreateChatroomInfo, userList);
         return ResponseEntity.ok().build();
     }
 

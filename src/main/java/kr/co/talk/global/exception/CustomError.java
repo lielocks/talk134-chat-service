@@ -9,6 +9,7 @@ public enum CustomError {
 
     // 회원
     USER_DOES_NOT_EXIST(1035, "해당 사용자가 존재하지 않습니다.", HttpStatus.NOT_FOUND.value()),
+    CHATROOM_DOES_NOT_EXIST(2002, "해당 채팅방이 존재하지 않습니다.", HttpStatus.NO_CONTENT.value()),
     
 
     // 공통

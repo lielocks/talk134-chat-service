@@ -1,6 +1,9 @@
 package kr.co.talk.global.client;
 
 import java.util.List;
+
+import kr.co.talk.domain.chatroom.dto.RequestDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.ChatRoomEnterResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -8,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(name = "USER-SERVICE")
 public interface UserClient {
@@ -39,4 +43,7 @@ public interface UserClient {
     @PostMapping(value = "/user/required-create-chatroom-info/{userId}")
     CreateChatroomResponseDto requiredCreateChatroomInfo(
             @PathVariable(value = "userId") long userId, List<Long> userList);
+
+    @GetMapping(value = "/user/enter-info")
+    ChatRoomEnterResponseDto requiredEnterInfo(@RequestHeader("userId") long userId);
 }

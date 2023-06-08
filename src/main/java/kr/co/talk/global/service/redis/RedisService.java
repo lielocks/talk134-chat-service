@@ -127,4 +127,9 @@ public class RedisService {
     public void deleteChatroomNotice(String roomId) {
         opsForNoticeMap.delete(RedisConstants.ROOM_NOTICE, roomId);
     }
+
+//    public void setUserIdChatRoom(String roomId, String userId) {
+//        String key = RedisConstants.CHAT_ROOM + "_" + roomId;
+//        redisTemplate.opsForValue().set(key, userId);
+//    }
 }

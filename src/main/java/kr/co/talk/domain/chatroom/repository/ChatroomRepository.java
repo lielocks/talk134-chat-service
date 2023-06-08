@@ -5,4 +5,5 @@ import kr.co.talk.domain.chatroom.model.Chatroom;
 
 public interface ChatroomRepository
         extends JpaRepository<Chatroom, Long>, ChatroomCustomRepository {
+    Chatroom findChatroomByChatroomId(Long id);
 }

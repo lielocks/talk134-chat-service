@@ -1,5 +1,6 @@
 package kr.co.talk.domain.chatroom.dto;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -39,5 +40,11 @@ public class RequestDto {
         private int timeout;
         private String teamCode;
         private String chatroomName;
+    }
+
+    @Data
+    public static class ChatRoomEnterResponseDto {
+        private String nickname;
+        private String userName;
     }
 }

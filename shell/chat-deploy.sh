@@ -3,7 +3,7 @@
 TALK134_HOME=/home/ec2-user/deploy/chat-service
 JAR_PATH=`find $TALK134_HOME -name talk134-chat-service*.jar`
 
-PID=`ps -ef | grep talk134-chat-service*.jar | grep -v grep | awk '{print $2}'`
+PID=`ps -ef | grep talk134-chat-service | grep java | grep jar | grep -v grep | awk '{print $2}'`
 echo "process is $PID"
 echo "jar_path is $JAR_PATH"
 

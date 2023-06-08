@@ -32,4 +32,6 @@ public class ChatroomUsers {
     private Chatroom chatroom;
 
     private long userId;
+
+    private boolean joinFlag; // 대화방 참가여부
 }

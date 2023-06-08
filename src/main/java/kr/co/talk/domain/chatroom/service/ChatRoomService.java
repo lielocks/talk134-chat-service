@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
@@ -17,7 +19,10 @@ import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
+import kr.co.talk.global.client.UserClient;
 import kr.co.talk.global.constants.RedisConstants;
+import kr.co.talk.global.exception.CustomError;
+import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +35,7 @@ public class ChatRoomService {
     private final ChatroomRepository chatroomRepository;
     private final ChatroomUsersRepository chatroomUsersRepository;
     private final RedisService redisService;
+    private final UserClient userClient;
 
     /**
      * 닉네임 또는 이름으로 채팅방 목록 조회
@@ -85,8 +91,14 @@ public class ChatRoomService {
                     }).collect(Collectors.toList());
 
             List<ChatroomUsers> chatroomUsers = chatroom.getChatroomUsers();
-            List<Long> userIds = chatroomUsers.stream().map(ChatroomUsers::getUserId)
-                    .collect(Collectors.toList());
+
+            boolean joinFlag = false;
+
+            Optional<Boolean> optJoinFlag = chatroomUsers.stream()
+                    .filter(cu -> cu.getUserId() == userId).map(cu -> cu.isJoinFlag()).findAny();
+
+            if (optJoinFlag.isPresent())
+                joinFlag = optJoinFlag.get();
 
             return ChatroomListDto.builder()
                     .roomId(chatroom.getChatroomId())
@@ -94,15 +106,21 @@ public class ChatRoomService {
                     .emoticons(emoticons)
                     .chatroomUsers(chatroomUsers)
                     .userCount(chatroomUsers.size())
-                    .joinFlag(userIds.contains(userId))
+                    .joinFlag(joinFlag)
                     .build();
         }).collect(Collectors.toList());
     }
 
     @Transactional
     public void createChatroom(long createUserId,
-            CreateChatroomResponseDto requiredCreateChatroomInfo,
             List<Long> userList) {
+        if (userList.size() <= 1) {
+            throw new CustomException(CustomError.USER_NUMBER_ERROR);
+        }
+
+        CreateChatroomResponseDto requiredCreateChatroomInfo =
+                userClient.requiredCreateChatroomInfo(createUserId, userList);
+
         Chatroom chatroom = Chatroom.builder()
                 .name(requiredCreateChatroomInfo.getChatroomName())
                 .teamCode(requiredCreateChatroomInfo.getTeamCode())
@@ -115,14 +133,7 @@ public class ChatRoomService {
                     .build();
         }).collect(Collectors.toList());
 
-        // 채팅방 만든사람도 chatroomUsers에 포함되어야함
-        chatroomUsers.add(ChatroomUsers.builder()
-                .chatroom(chatroom)
-                .userId(createUserId)
-                .build());
-
         chatroomUsersRepository.saveAll(chatroomUsers);
-
 
         ChatroomNoticeDto chatroomNoticeDto = ChatroomNoticeDto.builder()
                 .roomId(chatroom.getChatroomId())

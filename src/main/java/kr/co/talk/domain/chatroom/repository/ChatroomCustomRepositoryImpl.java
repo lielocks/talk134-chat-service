@@ -1,6 +1,7 @@
 package kr.co.talk.domain.chatroom.repository;
 
 import java.util.List;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import static kr.co.talk.domain.chatroomusers.entity.QChatroomUsers.chatroomUsers;
@@ -21,14 +22,14 @@ public class ChatroomCustomRepositoryImpl implements ChatroomCustomRepository {
                 .fetch();
     }
 
-	@Override
-	public List<Chatroom> findByTeamCodeAndName(String teamCode, List<Long> userIds) {
-		return jpaQueryFactory.selectFrom(chatroom)
-				.leftJoin(chatroom.chatroomUsers, chatroomUsers)
-				.fetchJoin()
-				.where(chatroom.teamCode.eq(teamCode), 
-						chatroomUsers.userId.in(userIds))
-				.fetch();
-	}
+    @Override
+    public List<Chatroom> findByTeamCodeAndName(String teamCode, List<Long> userIds) {
+        return jpaQueryFactory.selectFrom(chatroom)
+                .where(chatroom.chatroomId
+                        .in(JPAExpressions.select(chatroomUsers.chatroom.chatroomId)
+                                .from(chatroomUsers)
+                                .where(chatroomUsers.userId.in(userIds))))
+                .fetch();
+    }
 
 }

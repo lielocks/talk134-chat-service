@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import kr.co.talk.domain.chatroom.dto.FeedbackOptionalDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
 import kr.co.talk.domain.chatroom.service.ChatRoomService;
@@ -64,10 +65,16 @@ public class ChatroomController {
     @PostMapping("/create-chatroom")
     public ResponseEntity<?> createChatroom(@RequestHeader(value = "userId") Long userId,
             @RequestBody List<Long> userList) {
-        CreateChatroomResponseDto requiredCreateChatroomInfo =
-                userClient.requiredCreateChatroomInfo(userId, userList);
-        chatRoomService.createChatroom(userId, requiredCreateChatroomInfo, userList);
+        chatRoomService.createChatroom(userId, userList);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 피드백 선택형 등록 api
+     */
+    @PostMapping("/feedback/create/optional")
+    public void feedbackCreateOptional(@RequestBody FeedbackOptionalDto feedbackOptionalDto) {
+        log.info("feedbackOptionalDto::::" + feedbackOptionalDto);
     }
 
 }

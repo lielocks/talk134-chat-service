@@ -23,6 +23,7 @@ public class ChatService {
 
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) {
+        boolean flag;
         RequestDto.ChatRoomEnterResponseDto requiredEnterResponse = userClient.requiredEnterInfo(chatEnterDto.getUserId());
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {
@@ -33,11 +34,16 @@ public class ChatService {
                 .userId(chatEnterDto.getUserId())
                 .build();
         log.info("roomId ::: {}", chatroom.getChatroomId());
-        usersRepository.save(chatroomUser);
+        if (chatEnterDto.isSelected()) {
+            usersRepository.save(chatroomUser);
+            flag = true;
+        } else {
+            flag = false;
+        }
 
         return ChatEnterResponseDto.builder()
                 .userName(requiredEnterResponse.getUserName())
-                        .nickname(requiredEnterResponse.getNickname())
-                                .activeFlag(true).build();
+                .nickname(requiredEnterResponse.getNickname())
+                .activeFlag(flag).build();
     }
 }

@@ -8,4 +8,5 @@ import lombok.NoArgsConstructor;
 public class ChatEnterDto {
     private Long userId;
     private Long roomId;
+    private boolean selected;
 }

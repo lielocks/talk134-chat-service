@@ -13,8 +13,7 @@ import org.springframework.web.socket.config.annotation.*;
 @RequiredArgsConstructor
 @EnableWebSocket
 @EnableWebSocketMessageBroker
-public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer, WebSocketConfigurer {
-    private final WebSocketHandler webSocketHandler;
+public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -29,17 +28,4 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer, 
         registry.setApplicationDestinationPrefixes("/pub");
     }
 
-    @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-
-        registry.addHandler(webSocketHandler, "/ws").setAllowedOriginPatterns("*");
-    }
-//
-//    @Bean
-//    @Primary
-//    public SimpMessagingTemplate messagingTemplate(MessageChannel clientOutboundChannel) {
-//        SimpMessagingTemplate messagingTemplate = new SimpMessagingTemplate(clientOutboundChannel);
-//        messagingTemplate.setDefaultDestination("/sub/chat/room"); // Set your default destination here
-//        return messagingTemplate;
-//    }
 }

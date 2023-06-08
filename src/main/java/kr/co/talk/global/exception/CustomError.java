@@ -5,9 +5,10 @@ import org.springframework.http.HttpStatus;
 public enum CustomError {
     // 채팅방
     USER_NUMBER_ERROR(2000, "대화방 참가자는 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST.value()),
+    TEAM_CODE_ERROR(2001, "대화방 참가자는 같은 팀이어야만 합니다.", HttpStatus.BAD_REQUEST.value()),
 
     // 회원
-    USER_DOES_NOT_EXIST(2001, "USER SERVICE API ERROR", HttpStatus.BAD_REQUEST.value()),
+    USER_DOES_NOT_EXIST(1035, "해당 사용자가 존재하지 않습니다.", HttpStatus.NOT_FOUND.value()),
     
 
     // 공통

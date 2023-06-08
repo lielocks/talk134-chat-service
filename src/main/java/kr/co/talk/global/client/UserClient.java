@@ -17,8 +17,9 @@ public interface UserClient {
      * @param searchName
      * @return
      */
-    @GetMapping("/user/id/{searchName}")
-    List<UserIdResponseDto> getUserIdByName(@PathVariable("searchName") String searchName);
+    @GetMapping("/user/id/{teamCode}/{searchName}")
+    List<UserIdResponseDto> getUserIdByName(@PathVariable("teamCode") String teamCode,
+            @PathVariable("searchName") String searchName);
 
     /**
      * user-service로부터 teamCode get

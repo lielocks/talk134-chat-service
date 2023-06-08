@@ -50,7 +50,7 @@ public class ChatroomController {
     public ResponseEntity<?> findChatRoomsWithName(@RequestHeader(value = "userId") Long userId,
             String name) {
         String teamCode = userClient.getTeamCode(userId).getTeamCode();
-        List<UserIdResponseDto> userIdResponseDtos = userClient.getUserIdByName(name);
+        List<UserIdResponseDto> userIdResponseDtos = userClient.getUserIdByName(teamCode, name);
         return ResponseEntity
                 .ok(chatRoomService.findChatRoomsByName(userId, teamCode, userIdResponseDtos));
     }

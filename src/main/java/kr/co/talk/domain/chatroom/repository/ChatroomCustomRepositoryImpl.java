@@ -27,6 +27,7 @@ public class ChatroomCustomRepositoryImpl implements ChatroomCustomRepository {
         return jpaQueryFactory.selectFrom(chatroom)
                 .where(chatroom.chatroomId
                         .in(JPAExpressions.select(chatroomUsers.chatroom.chatroomId)
+                                .distinct()
                                 .from(chatroomUsers)
                                 .where(chatroomUsers.userId.in(userIds))))
                 .fetch();

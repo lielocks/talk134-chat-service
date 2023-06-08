@@ -118,6 +118,14 @@ public class ChatRoomService {
             throw new CustomException(CustomError.USER_NUMBER_ERROR);
         }
 
+        // 같은 team 인지 validation
+        String teamCode = userClient.getTeamCode(createUserId).getTeamCode();
+        userList.forEach(uId -> {
+            if (!teamCode.equals(userClient.getTeamCode(uId).getTeamCode())) {
+                throw new CustomException(CustomError.TEAM_CODE_ERROR);
+            }
+        });
+
         CreateChatroomResponseDto requiredCreateChatroomInfo =
                 userClient.requiredCreateChatroomInfo(createUserId, userList);
 

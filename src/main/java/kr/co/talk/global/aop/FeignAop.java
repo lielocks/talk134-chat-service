@@ -13,7 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FeignAop {
     @Around("execution(* kr.co.talk.global.client.*.*(..))")
-    public Object loggingAndThrowException(ProceedingJoinPoint pjp) throws Throwable {
+    public Object loggingAndThrowException(
+            ProceedingJoinPoint pjp) throws Throwable {
         Object result = "";
         try {
             log.info("client call before");

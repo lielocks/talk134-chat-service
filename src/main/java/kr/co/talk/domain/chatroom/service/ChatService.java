@@ -8,6 +8,8 @@ import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.global.client.UserClient;
+import kr.co.talk.global.exception.CustomError;
+import kr.co.talk.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,7 @@ public class ChatService {
         RequestDto.ChatRoomEnterResponseDto requiredEnterResponse = userClient.requiredEnterInfo(chatEnterDto.getUserId());
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {
-            throw new IllegalStateException("CHATROOM_DOES_NOT_EXIST");
+            throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
         }
         ChatroomUsers chatroomUser = ChatroomUsers.builder()
                 .chatroom(chatroom)

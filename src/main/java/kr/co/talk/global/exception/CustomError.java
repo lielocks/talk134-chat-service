@@ -8,6 +8,7 @@ public enum CustomError {
 
     // 회원
     USER_DOES_NOT_EXIST(2001, "USER SERVICE API ERROR", HttpStatus.BAD_REQUEST.value()),
+    CHATROOM_DOES_NOT_EXIST(2002, "해당 채팅방이 존재하지 않습니다.", HttpStatus.NO_CONTENT.value()),
     
 
     // 공통

@@ -141,6 +141,8 @@ public class ChatRoomService {
                 .createTime(System.currentTimeMillis())
                 .build();
 
+        log.info("chatroom.getChatroomId :: {} " , chatroom.getChatroomId());
+
         redisService.pushNoticeMap(String.valueOf(chatroom.getChatroomId()), chatroomNoticeDto);
     }
 

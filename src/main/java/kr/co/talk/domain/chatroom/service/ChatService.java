@@ -37,8 +37,6 @@ public class ChatService {
         List<ChatroomUsers> chatroomUsers = usersRepository.findChatroomUsersByChatroom(chatroom);
         ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
         chatroomUsersByUserId.activeFlagOn(flag);
-        log.info("chatroomUsersByUserId userId chatroomUsersByUserId chatroomUsersByUserId here ?? ?? ?? ?? :: {}", chatroomUsersByUserId);
-        log.info(":::::: chatroomUsersByUserId :::: {}", chatroomUsersByUserId.isActiveFlag());
 
         List<Long> idList = chatroomUsers.stream()
                 .map(ChatroomUsers::getUserId)
@@ -47,17 +45,11 @@ public class ChatService {
         if (idList == null) {
             throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
         }
-        log.info("userIdAndChatroom 111111   ::::::::::::::::::::  {}{}", chatEnterDto.getUserId(), chatroom.getChatroomId());
-        log.info("roomId ::: {}", chatroom.getChatroomId());
 
         List<RequestDto.ChatRoomEnterResponseDto> enterResponseDto = userClient.requiredEnterInfo(chatEnterDto.getUserId(), idList);
-        log.info("idList in enterResponseDto :: {}", idList);
-        log.info("OOOOOOOOOOOOOOOOOOOOOO LL :: {}", enterResponseDto);
 
         List<ChatEnterResponseDto> listResponseDto = new ArrayList<>();
         for (Long userId : idList) {
-            log.info("is userID here ?? ?? ?? ?? :: {}", userId);
-            usersRepository.findChatroomUsersByUserId(userId);
 
             RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.stream()
                     .filter(dto -> dto.getUserId().equals(userId))

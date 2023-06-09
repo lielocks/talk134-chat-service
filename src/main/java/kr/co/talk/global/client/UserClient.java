@@ -11,9 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
+import kr.co.talk.global.config.FeignLoggingConfig;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "USER-SERVICE")
+@FeignClient(name = "USER-SERVICE", configuration = FeignLoggingConfig.class)
 public interface UserClient {
     /**
      * user-service에서 name또는 nickname으로 userId get

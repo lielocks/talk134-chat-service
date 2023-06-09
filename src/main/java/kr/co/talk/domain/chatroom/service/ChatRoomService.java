@@ -91,14 +91,7 @@ public class ChatRoomService {
                     }).collect(Collectors.toList());
 
             List<ChatroomUsers> chatroomUsers = chatroom.getChatroomUsers();
-
-            boolean joinFlag = false;
-
-            Optional<Boolean> optJoinFlag = chatroomUsers.stream()
-                    .filter(cu -> cu.getUserId() == userId).map(cu -> cu.isJoinFlag()).findAny();
-
-            if (optJoinFlag.isPresent())
-                joinFlag = optJoinFlag.get();
+            Optional<ChatroomUsers> optJoinUser = chatroomUsers.stream().filter(u->u.getUserId() == userId).findAny();
 
             return ChatroomListDto.builder()
                     .roomId(chatroom.getChatroomId())
@@ -106,7 +99,7 @@ public class ChatRoomService {
                     .emoticons(emoticons)
                     .chatroomUsers(chatroomUsers)
                     .userCount(chatroomUsers.size())
-                    .joinFlag(joinFlag)
+                    .joinFlag(optJoinUser.isPresent())
                     .build();
         }).collect(Collectors.toList());
     }

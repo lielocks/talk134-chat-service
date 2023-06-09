@@ -32,4 +32,10 @@ public class ChatroomUsers {
     private Chatroom chatroom;
 
     private long userId;
+
+    private boolean activeFlag;
+
+    public void activeFlagOn(boolean activeFlag) {
+        this.activeFlag = activeFlag;
+    }
 }

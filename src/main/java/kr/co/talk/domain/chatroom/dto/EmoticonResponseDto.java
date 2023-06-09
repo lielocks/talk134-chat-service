@@ -6,5 +6,5 @@ import lombok.Data;
 @Builder
 @Data
 public class EmoticonResponseDto {
-    private String emoticonCode;
+    private int emoticonCode;
 }

@@ -6,6 +6,7 @@ public enum CustomError {
     // 채팅방
     USER_NUMBER_ERROR(2000, "대화방 참가자는 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST.value()),
     TEAM_CODE_ERROR(2001, "대화방 참가자는 같은 팀이어야만 합니다.", HttpStatus.BAD_REQUEST.value()),
+    CHATROOM_ALREADY_JOINED(2002, "이미 참가한 채팅방입니다.", HttpStatus.FORBIDDEN.value()),
 
     // 회원
     USER_DOES_NOT_EXIST(1035, "해당 사용자가 존재하지 않습니다.", HttpStatus.NOT_FOUND.value()),

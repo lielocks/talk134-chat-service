@@ -8,8 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @Slf4j
@@ -21,10 +22,10 @@ public class ChatController {
 
     @MessageMapping("/enter")
     public void message(@Payload ChatEnterDto chatEnterDto) {
-        ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
+        List<ChatEnterResponseDto> responseDto = chatService.sendChatMessage(chatEnterDto);
         log.info("chatEnterDto RoomId in responseDto :: {} ", chatEnterDto.getRoomId());
         log.info("chatEnterDto UserId in responseDto :: {} ", chatEnterDto.getUserId());
         log.info("Full ResponseDto :: {} ", responseDto);
-        template.convertAndSend("/sub/chat/room" , responseDto);
+        template.convertAndSend("/sub/chat/room/" + chatEnterDto.getRoomId(), responseDto);
     }
 }

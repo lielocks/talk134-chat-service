@@ -45,6 +45,6 @@ public interface UserClient {
     CreateChatroomResponseDto requiredCreateChatroomInfo(
             @PathVariable(value = "userId") long userId, List<Long> userList);
 
-    @GetMapping(value = "/user/enter-info")
-    ChatRoomEnterResponseDto requiredEnterInfo(@RequestHeader("userId") long userId);
+    @GetMapping(value = "/user/enter-info/{userList}")
+    List<ChatRoomEnterResponseDto> requiredEnterInfo(@RequestHeader("userId") long userId, @PathVariable List<Long> userList);
 }

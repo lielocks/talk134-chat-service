@@ -1,9 +1,6 @@
 package kr.co.talk.domain.chatroom.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Builder
@@ -12,5 +9,6 @@ import lombok.NoArgsConstructor;
 public class ChatEnterResponseDto {
     private String nickname;
     private String userName;
+    private String profileUrl;
     private boolean activeFlag;
 }

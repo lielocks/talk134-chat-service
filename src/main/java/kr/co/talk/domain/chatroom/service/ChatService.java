@@ -54,7 +54,7 @@ public class ChatService {
             RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.stream()
                     .filter(dto -> dto.getUserId().equals(userId))
                     .findFirst()
-                    .orElse(null);
+                    .orElseThrow(() -> new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST));
 
             ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), userId);
 

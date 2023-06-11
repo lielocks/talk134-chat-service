@@ -2,13 +2,13 @@ package kr.co.talk.global.service.redis;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+
+import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -128,4 +128,14 @@ public class RedisService {
         opsForNoticeMap.delete(RedisConstants.ROOM_NOTICE, roomId);
     }
 
+    public void pushQuestionList(String roomId, String userId, KeywordSendDto keywordSendDto) {
+        try {
+            String writeValueAsString = objectMapper.writeValueAsString(keywordSendDto);
+            String key = roomId + "_" + userId + RedisConstants.QUESTION;
+            opsForList.leftPush(key, writeValueAsString);
+        } catch (JsonProcessingException e) {
+            log.error("json parse error", e);
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -16,7 +16,7 @@ public class KeywordController {
     private final KeywordService keywordService;
 
     @PostMapping("/select-keyword")
-    public List<TopicListDto> selectKeywordChatroom(@RequestBody KeywordSendDto sendDto) {
+    public List<TopicListDto> selectKeywordChatroom(@RequestHeader long userId, @RequestBody KeywordSendDto sendDto) {
         return keywordService.sendTopicList(sendDto);
     }
 }

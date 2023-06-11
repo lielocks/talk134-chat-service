@@ -8,6 +8,7 @@ import kr.co.talk.domain.chatroomusers.repository.KeywordRepository;
 import kr.co.talk.domain.chatroomusers.repository.QuestionRepository;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
+import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class KeywordService {
 
     private final KeywordRepository keywordRepository;
     private final QuestionRepository questionRepository;
+    private final RedisService redisService;
 
     public List<TopicListDto> sendTopicList(KeywordSendDto keywordSendDto) {
         List<Long> keywordCode = keywordSendDto.getKeywordCode();
@@ -30,18 +32,17 @@ public class KeywordService {
         for (int i = 0; i < keywordCode.size(); i++) {
             Question byQuestion = questionRepository.findByQuestionIdAndKeyword_KeywordId(questionCode.get(i), keywordCode.get(i));
             if (byQuestion == null) {
-                throw new CustomException(CustomError.KEYWORD_DOES_NOT_EXIST);
+                throw new CustomException(CustomError.KEYWORD_DOES_NOT_MATCH);
             }
             Keyword keyword = keywordRepository.findByKeywordId(keywordCode.get(i));
 
-            TopicListDto topicListDto = new TopicListDto();
-            topicListDto.setKeyword(keyword.getName());
-            topicListDto.setQuestionName(byQuestion.getContent());
-            topicListDto.setDepth(keyword.getDepth());
+            TopicListDto topicListDto =
+                    TopicListDto.builder().keyword(keyword.getName()).questionName(byQuestion.getContent()).depth(keyword.getDepth()).build();
 
             responseDto.add(topicListDto);
         }
 
+        redisService.pushQuestionList(String.valueOf(keywordSendDto.getRoomId()), String.valueOf(keywordSendDto.getUserId()), keywordSendDto);
         return responseDto;
     }
 

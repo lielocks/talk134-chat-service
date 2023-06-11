@@ -11,8 +11,8 @@ public enum CustomError {
     // 회원
     USER_DOES_NOT_EXIST(1035, "해당 사용자가 존재하지 않습니다.", HttpStatus.NOT_FOUND.value()),
 
-    // 키워드 .질문
-    KEYWORD_DOES_NOT_EXIST(4001, "해당 키워드가 존재하지 않습니다.", HttpStatus.BAD_REQUEST.value()),
+    // 키워드, 질문
+    KEYWORD_DOES_NOT_MATCH(4001, "해당 키워드에 해당하는 질문이 존재하지 않습니다.", HttpStatus.BAD_REQUEST.value()),
 
     // 공통
     SERVER_ERROR(3000, "알수 없는 문제가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()),

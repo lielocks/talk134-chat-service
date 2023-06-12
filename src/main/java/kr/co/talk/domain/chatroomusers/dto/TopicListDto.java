@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TopicListDto {
     private String keyword;
+    private Long questionId;
     private String questionName;
     private String depth;
 }

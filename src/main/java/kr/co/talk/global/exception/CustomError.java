@@ -13,6 +13,8 @@ public enum CustomError {
 
     // 키워드, 질문
     KEYWORD_DOES_NOT_MATCH(4001, "해당 키워드에 해당하는 질문이 존재하지 않습니다.", HttpStatus.BAD_REQUEST.value()),
+    KEYWORD_DOES_NOT_EXIST(4002, "해당 키워드가 존재하지 않습니다.", HttpStatus.BAD_REQUEST.value()),
+    QUESTION_LIST_SIZE_MISMATCH(4003, "해당 질문 리스트의 갯수가 3이 아닙니다.", HttpStatus.BAD_REQUEST.value()),
 
     // 공통
     SERVER_ERROR(3000, "알수 없는 문제가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()),

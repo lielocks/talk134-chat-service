@@ -11,6 +11,7 @@ import java.util.List;
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
+import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
@@ -96,12 +97,12 @@ public class RedisServiceTest {
 		List<Long> questionCode = Arrays.asList(5L, 10L, 15L);
 		List<Long> keywordCode = Arrays.asList(1L, 2L, 3L);
 		String key = roomId + "_" + userId + RedisConstants.QUESTION;
-		KeywordSendDto keywordSendDto = KeywordSendDto.builder().userId(userId).roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
+		KeywordSetDto keywordSetDto = KeywordSetDto.builder().userId(userId).roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
 
 		// when
-		redisService.pushQuestionList(String.valueOf(roomId), String.valueOf(userId), keywordSendDto);
+		redisService.pushQuestionList(String.valueOf(roomId), String.valueOf(userId), keywordSetDto);
 		List<String> list = redisService.getList(key);
-		KeywordSendDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSendDto.class);
+		KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
 
 		// then
 		assertEquals(keywordDtoValue.getQuestionCode().get(0), 5L);

@@ -59,6 +59,7 @@ public class ChatService {
             ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), userId);
 
             ChatEnterResponseDto responseDto = new ChatEnterResponseDto(
+                    enterDto.getUserId(),
                     enterDto.getNickname(),
                     enterDto.getUserName(),
                     enterDto.getProfileUrl(),

@@ -7,6 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatEnterResponseDto {
+    private Long userId;
     private String nickname;
     private String userName;
     private String profileUrl;

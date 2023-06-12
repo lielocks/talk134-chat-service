@@ -2,13 +2,17 @@ package kr.co.talk.global.service.redis;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+
+import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
+import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
+import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
+import kr.co.talk.global.exception.CustomError;
+import kr.co.talk.global.exception.CustomException;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -126,6 +130,39 @@ public class RedisService {
 
     public void deleteChatroomNotice(String roomId) {
         opsForNoticeMap.delete(RedisConstants.ROOM_NOTICE, roomId);
+    }
+
+    public void pushQuestionList(String roomId, String userId, KeywordSetDto keywordSetDto) {
+        try {
+            String writeValueAsString = objectMapper.writeValueAsString(keywordSetDto);
+            String key = roomId + "_" + userId + RedisConstants.QUESTION;
+            opsForList.leftPush(key, writeValueAsString);
+        } catch (JsonProcessingException e) {
+            log.error("json parse error", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setQuestionCode(String userId, String roomId, QuestionCodeDto listDto) {
+        try {
+            String key = roomId + "_" + userId + RedisConstants.QUESTION;
+            List<String> valueList = getList(key);
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList.get(0), KeywordSetDto.class);
+
+            List<Long> firstCode = keywordDtoValue.getQuestionCode();
+            if (listDto.getQuestionCodeList().size() != firstCode.size()) {
+                throw new CustomException(CustomError.QUESTION_LIST_SIZE_MISMATCH);
+            }
+            for (int i = 0; i < listDto.getQuestionCodeList().size(); i++) {
+                firstCode.set(i, listDto.getQuestionCodeList().get(i));
+            }
+
+            valueList.set(0, objectMapper.writeValueAsString(keywordDtoValue));
+            redisTemplate.opsForList().set(key, 0, valueList.get(0));
+        } catch (JsonProcessingException e) {
+            log.error("json parse error", e);
+            throw new RuntimeException(e);
+        }
     }
 
 }

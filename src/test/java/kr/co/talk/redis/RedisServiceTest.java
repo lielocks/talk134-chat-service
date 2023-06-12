@@ -5,12 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.Arrays;
 import java.util.List;
 
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
+import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
+import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.service.redis.RedisService;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.discovery.converters.Auto;
 
 @SpringBootTest
+@Slf4j
 public class RedisServiceTest {
 
 	@Autowired
@@ -79,6 +84,29 @@ public class RedisServiceTest {
 		assertEquals(roomEmoticon.getEmoticonCode(), EmoticonCode.EMOTICON_TP1);
 		assertEquals(roomEmoticon.getFromUserId(), fromUserId);
 		assertEquals(roomEmoticon.getToUserId(), toUserId);
+
+		redisTemplate.delete(key);
+	}
+
+	@Test
+	@DisplayName("set question Code and keyword Code")
+	void setQuestionCode() throws JsonProcessingException{
+		// given
+		long userId = 123L;
+		long roomId = 100L;
+		List<Long> questionCode = Arrays.asList(5L, 10L, 15L);
+		List<Long> keywordCode = Arrays.asList(1L, 2L, 3L);
+		String key = roomId + "_" + userId + RedisConstants.QUESTION;
+		KeywordSetDto keywordSetDto = KeywordSetDto.builder().userId(userId).roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
+
+		// when
+		redisService.pushQuestionList(String.valueOf(roomId), String.valueOf(userId), keywordSetDto);
+		List<String> list = redisService.getList(key);
+		KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
+
+		// then
+		assertEquals(keywordDtoValue.getQuestionCode().get(0), 5L);
+		assertEquals(keywordDtoValue.getKeywordCode().get(0), 1L);
 
 		redisTemplate.delete(key);
 	}

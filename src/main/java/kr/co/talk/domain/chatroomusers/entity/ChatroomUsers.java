@@ -35,7 +35,13 @@ public class ChatroomUsers {
 
     private boolean activeFlag;
 
+    private int socketFlag;
+
     public void activeFlagOn(boolean activeFlag) {
         this.activeFlag = activeFlag;
+    }
+
+    public void setSocketFlag(int socketFlag) {
+        this.socketFlag = socketFlag;
     }
 }

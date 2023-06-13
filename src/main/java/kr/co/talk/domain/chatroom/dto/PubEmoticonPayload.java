@@ -5,9 +5,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ChatEnterDto {
+public class PubEmoticonPayload {
     private Long userId;
     private Long roomId;
-    private boolean selected;
-    private int socketFlag;
+    private Long toUserId;
+    private int emoticonCode;
 }

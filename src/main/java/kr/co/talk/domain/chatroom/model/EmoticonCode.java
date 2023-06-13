@@ -3,6 +3,8 @@ package kr.co.talk.domain.chatroom.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.stream.Stream;
+
 @Getter
 @AllArgsConstructor
 public enum EmoticonCode {
@@ -14,4 +16,9 @@ public enum EmoticonCode {
     EMOTICON_TP6(6);
 
     private int code;
+
+    public static EmoticonCode of(int code) throws IllegalArgumentException {
+        return Stream.of(EmoticonCode.values()).filter(e -> e.getCode() == code).findFirst()
+                .orElseThrow(IllegalArgumentException::new);
+    }
 }

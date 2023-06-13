@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RequestDto {
     /**
-     * uesr-service
+     * user-service
      */
     @Data
     public static class NameResponseDto {
@@ -18,7 +18,7 @@ public class RequestDto {
     }
 
     /**
-     * uesr-service
+     * user-service
      */
     @Data
     public static class TeamCodeResponseDto {
@@ -26,7 +26,7 @@ public class RequestDto {
     }
 
     /**
-     * uesr-service
+     * user-service
      */
     @Data
     public static class UserIdResponseDto {
@@ -44,10 +44,15 @@ public class RequestDto {
         private String chatroomName;
     }
 
+    /**
+     * 대화방 대기화면에 나타날 user info dto
+     */
     @Data
     public static class ChatRoomEnterResponseDto {
+        private Long userId;
         private String nickname;
         private String userName;
+        private String profileUrl;
     }
     
     @Data

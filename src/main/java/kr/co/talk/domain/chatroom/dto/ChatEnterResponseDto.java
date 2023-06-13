@@ -1,16 +1,26 @@
 package kr.co.talk.domain.chatroom.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.List;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatEnterResponseDto {
-    private String nickname;
-    private String userName;
-    private boolean activeFlag;
+    private List<Long> roomId;
+    private List<ChatUserInfo> chatUserInfoList;
+    @Data
+    @AllArgsConstructor
+    @Builder
+    public static class ChatUserInfo {
+        private Long userId;
+        private String nickname;
+        private String userName;
+        private String profileUrl;
+        private boolean activeFlag;
+        private int socketFlag;
+    }
+
 }

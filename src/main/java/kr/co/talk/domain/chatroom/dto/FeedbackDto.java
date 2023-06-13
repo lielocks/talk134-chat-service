@@ -1,6 +1,7 @@
 package kr.co.talk.domain.chatroom.dto;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;

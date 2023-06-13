@@ -168,6 +168,7 @@ public class ChatRoomService {
      * 
      * @param feedbackDto
      */
+    @Transactional
     public void saveFeedbackToRedis(long userId, FeedbackDto feedbackDto) {
         RequestDto.UserStatusDto userStausDto = userClient.getUserStaus(userId);
 
@@ -190,5 +191,17 @@ public class ChatRoomService {
 
         redisService.pushMap(RedisConstants.FEEDBACK_ + feedback.getRoomId(),
                 String.valueOf(feedback.getUserId()), feedback);
+        
+        
+        // user service 쪽으로 status update 요청 보냄
+        UserStatusDto updateRequestStatusDto = UserStatusDto.builder()
+                .statusEnergy(feedbackDto.getStatusEnergy())
+                .statusRelation(feedbackDto.getStatusRelation())
+                .statusStress(feedbackDto.getStatusStress())
+                .statusStable(feedbackDto.getStatusStable())
+                .build();
+
+        userClient.changeStatus(userId, updateRequestStatusDto);
+        // kafka를 통해 채팅방 종료 이벤트 메세지 보냄
     }
 }

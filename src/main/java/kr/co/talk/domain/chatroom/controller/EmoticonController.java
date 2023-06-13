@@ -5,22 +5,22 @@ import kr.co.talk.domain.chatroom.service.EmoticonService;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.ErrorDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
 
 @RequiredArgsConstructor
-@RestController
+@Controller
 public class EmoticonController {
-    private static final String CHATROOM_DESTINATION = "/sub/chat/room";
+    private static final String CHAT_ROOM_EMOTICON_DESTINATION = "/sub/chat/room/emoticon";
 
     private final EmoticonService emoticonService;
     private final SimpMessagingTemplate template;
 
-    @MessageMapping("/room/emoticon/{roomId}")
-    public void publishEmoticon(@DestinationVariable Long roomId, @Payload PubEmoticonPayload payload) {
+    @MessageMapping("/room/emoticon")
+    public void publishEmoticon(@Payload PubEmoticonPayload payload) {
+        Long roomId = payload.getRoomId();
         if (roomId == null) {
             return;
         }
@@ -38,7 +38,7 @@ public class EmoticonController {
     }
 
     private String getRoomDestination(Long roomId) {
-        return String.format("%s/%s", CHATROOM_DESTINATION, roomId);
+        return String.format("%s/%s", CHAT_ROOM_EMOTICON_DESTINATION, roomId);
     }
 
     private void sendRoomNotFoundError(Long roomId) {

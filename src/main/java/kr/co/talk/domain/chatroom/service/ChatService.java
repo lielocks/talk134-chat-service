@@ -28,13 +28,13 @@ public class ChatService {
     private final UserClient userClient;
 
     @Transactional
-    public List<ChatEnterResponseDto> sendChatMessage(ChatEnterDto chatEnterDto) {
+    public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) {
         boolean flag = chatEnterDto.isSelected() ? true : false;
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {
             throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
         }
-        List<ChatroomUsers> chatroomUsers = usersRepository.findChatroomUsersByChatroom(chatroom);
+        List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
         ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
         chatroomUsersByUserId.activeFlagOn(flag);
 
@@ -47,8 +47,19 @@ public class ChatService {
         }
 
         List<RequestDto.ChatRoomEnterResponseDto> enterResponseDto = userClient.requiredEnterInfo(chatEnterDto.getUserId(), idList);
+        List<ChatroomUsers> usersByUserId = usersRepository.findChatroomUsersByUserId(chatEnterDto.getUserId());
 
-        List<ChatEnterResponseDto> listResponseDto = new ArrayList<>();
+        List<Chatroom> chatrooms = new ArrayList<>();
+        List<Long> roomIdList = new ArrayList<>();
+
+        usersByUserId.forEach(ChatroomUsers -> {
+            Chatroom usersChatroom = ChatroomUsers.getChatroom();
+            chatrooms.add(usersChatroom);
+            roomIdList.add(usersChatroom.getChatroomId());
+        });
+
+        int finalFlag = socketFlagStatus(chatEnterDto.getSocketFlag(), chatEnterDto);
+        List<ChatEnterResponseDto.ChatUserInfo> chatUserInfos = new ArrayList<>();
         for (Long userId : idList) {
 
             RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.stream()
@@ -58,17 +69,67 @@ public class ChatService {
 
             ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), userId);
 
-            ChatEnterResponseDto responseDto = new ChatEnterResponseDto(
+            ChatEnterResponseDto.ChatUserInfo responseUserInfo = new ChatEnterResponseDto.ChatUserInfo(
                     enterDto.getUserId(),
                     enterDto.getNickname(),
                     enterDto.getUserName(),
                     enterDto.getProfileUrl(),
-                    byChatroomIdAndUserId.isActiveFlag()
+                    byChatroomIdAndUserId.isActiveFlag(),
+                    finalFlag
             );
-            listResponseDto.add(responseDto);
+            chatUserInfos.add(responseUserInfo);
         }
-        return listResponseDto;
 
+        return ChatEnterResponseDto.builder().chatUserInfoList(chatUserInfos).roomId(roomIdList).build();
+    }
+
+    public int socketFlagStatus(int socketFlag, ChatEnterDto chatEnterDto) {
+        int flag = 0;
+        Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
+        if (chatroom == null) {
+            throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
+        }
+
+        if (socketFlag == 0) {
+            List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
+            boolean allUsersActive = allChatroomUsersActive(chatroomUsers);
+            if (allUsersActive) {
+                setAllChatroomUsersActiveFlag(chatroomUsers, false);
+                flag = 1;
+            } else {
+                flag = 0;
+            }
+        }
+
+        if (socketFlag == 2) {
+            List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
+            boolean allUsersActive = allChatroomUsersActive(chatroomUsers);
+            if (allUsersActive) {
+                flag = 3;
+            } else {
+                flag = 2;
+            }
+        }
+
+        for (ChatroomUsers user : getChatroomUsers(chatroom)) {
+            user.setSocketFlag(flag);
+        }
+        return flag;
+    }
+
+    private List<ChatroomUsers> getChatroomUsers(Chatroom chatroom) {
+        List<ChatroomUsers> chatroomUsers = usersRepository.findChatroomUsersByChatroom(chatroom);
+        return chatroomUsers;
+    }
+
+    private void setAllChatroomUsersActiveFlag(List<ChatroomUsers> chatroomUsers, boolean activeFlag) {
+        for (ChatroomUsers user : chatroomUsers) {
+            user.activeFlagOn(activeFlag);
+        }
+    }
+
+    private boolean allChatroomUsersActive(List<ChatroomUsers> chatroomUsers) {
+        return chatroomUsers.stream().allMatch(ChatroomUsers::isActiveFlag);
     }
 
 }

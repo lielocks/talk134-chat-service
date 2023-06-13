@@ -10,6 +10,7 @@ import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.global.client.UserClient;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
+import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,9 +27,16 @@ public class ChatService {
     private final ChatroomUsersRepository usersRepository;
     private final ChatroomRepository chatroomRepository;
     private final UserClient userClient;
+    private final RedisService redisService;
 
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) {
+        try {
+            redisService.pushUserChatroom(String.valueOf(chatEnterDto.getUserId()), String.valueOf(chatEnterDto.getRoomId()));
+        } catch (CustomException e) {
+            throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
+        }
+
         boolean flag = chatEnterDto.isSelected() ? true : false;
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {

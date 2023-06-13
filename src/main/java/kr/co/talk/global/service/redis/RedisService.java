@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -163,6 +164,15 @@ public class RedisService {
             log.error("json parse error", e);
             throw new RuntimeException(e);
         }
+    }
+
+    public void pushUserChatroom(String userId, String roomId) throws CustomException{
+        String key = userId + RedisConstants.CHATROOM;
+        if (valueOps.get(key) != null) {
+            throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
+        }
+        valueOps.set(key, roomId);
+        valueOps.getOperations().expire(key, 1, TimeUnit.MINUTES);
     }
 
 }

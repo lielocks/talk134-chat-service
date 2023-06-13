@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import kr.co.talk.domain.chatroom.dto.FeedbackOptionalDto;
+import kr.co.talk.domain.chatroom.dto.FeedbackDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
 import kr.co.talk.domain.chatroom.service.ChatRoomService;
@@ -72,9 +73,33 @@ public class ChatroomController {
     /**
      * 피드백 선택형 등록 api
      */
-    @PostMapping("/feedback/create/optional")
-    public void feedbackCreateOptional(@RequestBody FeedbackOptionalDto feedbackOptionalDto) {
-        log.info("feedbackOptionalDto::::" + feedbackOptionalDto);
+    @PostMapping("/create/feedback/optional")
+    public ResponseEntity<?> feedbackCreateOptional(
+            @RequestBody FeedbackDto feedbackDto) {
+        log.info("feedbackOptionalDto::::" + feedbackDto);
+        chatRoomService.saveFeedbackOptionalToRedis(feedbackDto);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 피드백 필수형 등록 api
+     */
+    @PostMapping("/create/feedback")
+    public ResponseEntity<?> feedbackCreateOptional(@RequestHeader(value = "userId") Long userId,
+            @RequestBody FeedbackDto feedbackDto) {
+        log.info("feedbackOptionalDto::::" + feedbackDto);
+        chatRoomService.saveFeedbackToRedis(userId, feedbackDto);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 피드백 필수형 조회
+     * @param userId
+     * @return
+     */
+    @GetMapping("/find/feedback")
+    public ResponseEntity<?> findFeedback(@RequestHeader(value = "userId") Long userId) {
+        return ResponseEntity.ok(userClient.getUserStaus(userId));
     }
 
 }

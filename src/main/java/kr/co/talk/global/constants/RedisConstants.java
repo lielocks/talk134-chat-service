@@ -8,4 +8,5 @@ public class RedisConstants {
 	public static final String USER_COUNT = "USER_COUNT";
 	public static final String ROOM_EMOTICON = "_EMOTICON";
 	public static final String ROOM_NOTICE = "ROOM_NOTICE";
+	public static final String FEEDBACK_ = "FEEDBACK_";
 }

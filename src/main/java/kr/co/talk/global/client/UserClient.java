@@ -5,12 +5,14 @@ import java.util.List;
 import kr.co.talk.domain.chatroom.dto.RequestDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.ChatRoomEnterResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.UserStatusDto;
 import kr.co.talk.global.config.FeignLoggingConfig;
 import org.springframework.web.bind.annotation.RequestHeader;
 
@@ -45,6 +47,15 @@ public interface UserClient {
     CreateChatroomResponseDto requiredCreateChatroomInfo(
             @PathVariable(value = "userId") long userId, List<Long> userList);
 
+    /**
+     * user-service로부터 user의 status get
+     * 
+     * @param userId
+     * @return
+     */
+    @GetMapping("/user/status/{userId}")
+    public UserStatusDto getUserStaus(@PathVariable("userId") long userId);
+    
     @GetMapping(value = "/user/enter-info")
     ChatRoomEnterResponseDto requiredEnterInfo(@RequestHeader("userId") long userId);
 }

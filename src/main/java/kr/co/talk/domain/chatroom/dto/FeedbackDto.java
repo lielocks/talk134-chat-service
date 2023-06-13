@@ -3,22 +3,33 @@ package kr.co.talk.domain.chatroom.dto;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Builder
+/**
+ * 피드백 필수값 DTO
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class FeedbackOptionalDto {
+public class FeedbackDto {
     private long userId;
     private long roomId;
     private String sentence;
     private int score;
+    
+    private int statusEnergy;
+    private int statusRelation;
+    private int statusStress;
+    private int statusStable;
+    
+    private int statusEnergyBefore;
+    private int statusRelationBefore;
+    private int statusStressBefore;
+    private int statusStableBefore;
+    
     private List<Feedback> feedback;
-
-    // @Builder
+    
     @Data
     @NoArgsConstructor
     @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,4 +38,5 @@ public class FeedbackOptionalDto {
         private String review;
         private int feedbackScore;
     }
+    
 }

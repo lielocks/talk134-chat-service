@@ -11,9 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
 import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
+import kr.co.talk.domain.chatroom.dto.FeedbackDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto;
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.UserStatusDto;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
@@ -91,7 +94,8 @@ public class ChatRoomService {
                     }).collect(Collectors.toList());
 
             List<ChatroomUsers> chatroomUsers = chatroom.getChatroomUsers();
-            Optional<ChatroomUsers> optJoinUser = chatroomUsers.stream().filter(u->u.getUserId() == userId).findAny();
+            Optional<ChatroomUsers> optJoinUser =
+                    chatroomUsers.stream().filter(u -> u.getUserId() == userId).findAny();
 
             return ChatroomListDto.builder()
                     .roomId(chatroom.getChatroomId())
@@ -142,9 +146,49 @@ public class ChatRoomService {
                 .createTime(System.currentTimeMillis())
                 .build();
 
-        log.info("chatroom.getChatroomId :: {} " , chatroom.getChatroomId());
+        log.info("chatroom.getChatroomId :: {} ", chatroom.getChatroomId());
 
-        redisService.pushNoticeMap(String.valueOf(chatroom.getChatroomId()), chatroomNoticeDto);
+        redisService.pushMap(RedisConstants.ROOM_NOTICE, String.valueOf(chatroom.getChatroomId()),
+                chatroomNoticeDto);
     }
 
+    /**
+     * optional feedback save
+     * 
+     * @param feedbackDto
+     */
+    public void saveFeedbackOptionalToRedis(FeedbackDto feedbackDto) {
+        // redisService.pushMap(RedisConstants.FEEDBACK_OPTIONAL, null, feedbackDto);
+        redisService.pushMap(RedisConstants.FEEDBACK_ + feedbackDto.getRoomId(),
+                String.valueOf(feedbackDto.getUserId()), feedbackDto);
+    }
+
+    /**
+     * 필수 feedback save
+     * 
+     * @param feedbackDto
+     */
+    public void saveFeedbackToRedis(long userId, FeedbackDto feedbackDto) {
+        RequestDto.UserStatusDto userStausDto = userClient.getUserStaus(userId);
+
+        Map<String, Object> entry = redisService
+                .getEntry(RedisConstants.FEEDBACK_ + feedbackDto.getRoomId(), FeedbackDto.class);
+        FeedbackDto feedback = (FeedbackDto) entry.get(String.valueOf(userId));
+
+        feedback.setStatusEnergy(feedbackDto.getStatusEnergy());
+        feedback.setStatusRelation(feedbackDto.getStatusRelation());
+        feedback.setStatusStress(feedbackDto.getStatusStress());
+        feedback.setStatusStable(feedbackDto.getStatusStable());
+
+        // before setting
+        if (userStausDto.isToday()) {
+            feedback.setStatusEnergyBefore(userStausDto.getStatusEnergy());
+            feedback.setStatusRelationBefore(userStausDto.getStatusRelation());
+            feedback.setStatusStressBefore(userStausDto.getStatusStress());
+            feedback.setStatusStableBefore(userStausDto.getStatusStable());
+        }
+
+        redisService.pushMap(RedisConstants.FEEDBACK_ + feedback.getRoomId(),
+                String.valueOf(feedback.getUserId()), feedback);
+    }
 }

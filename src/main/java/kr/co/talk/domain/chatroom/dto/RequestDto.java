@@ -1,5 +1,7 @@
 package kr.co.talk.domain.chatroom.dto;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -46,5 +48,19 @@ public class RequestDto {
     public static class ChatRoomEnterResponseDto {
         private String nickname;
         private String userName;
+    }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PROTECTED)
+    public static class UserStatusDto {
+        private boolean isToday; // 오늘 status update 된적있는지
+        private String name;
+        private String nickname;
+        private int statusEnergy;
+        private int statusRelation;
+        private int statusStress;
+        private int statusStable;
     }
 }

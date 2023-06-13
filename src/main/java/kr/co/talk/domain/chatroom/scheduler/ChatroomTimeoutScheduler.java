@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
+import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,13 +26,14 @@ public class ChatroomTimeoutScheduler {
         log.debug("fixed rate task - {}", System.currentTimeMillis() / 1000);
 
         // 채팅방 timeout check
-        Map<String, ChatroomNoticeDto> chatroomNoticeEntry = redisService.getChatroomNoticeEntry();
+        Map<String, Object> chatroomNoticeEntry =
+                redisService.getEntry(RedisConstants.ROOM_NOTICE, ChatroomNoticeDto.class);
 
-        log.info("현재 시간 :: " + System.currentTimeMillis());
+        log.debug("현재 시간 :: " + System.currentTimeMillis());
 
         chatroomNoticeEntry.entrySet().forEach(entry -> {
             String roomId = entry.getKey();
-            ChatroomNoticeDto cn = entry.getValue();
+            ChatroomNoticeDto cn = (ChatroomNoticeDto) entry.getValue();
 
             log.info("createTime:::" + cn.getCreateTime());
             if (cn.getCreateTime() + cn.getTimeout() > System.currentTimeMillis()
@@ -41,11 +43,11 @@ public class ChatroomTimeoutScheduler {
                 // TODO 종료 5분전이면 socket으로 알림
                 log.info("채팅방 종료 5분전, CHAT ROOM ID ::", cn.getRoomId());
                 cn.setNotice(true); // 5분전 공지 flag
-                redisService.pushNoticeMap(roomId, cn);
+                redisService.pushMap(RedisConstants.ROOM_NOTICE, roomId, cn);
             } else if (cn.getCreateTime() + cn.getTimeout() <= System.currentTimeMillis()) {
                 // TODO 채팅방 종료 알림 SOCKET
                 log.info("채팅방 종료 , CHAT ROOM ID ::", cn.getRoomId());
-                redisService.deleteChatroomNotice(roomId);
+                redisService.deleteMap(RedisConstants.ROOM_NOTICE, roomId);
             }
         });
 

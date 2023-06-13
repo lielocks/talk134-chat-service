@@ -32,4 +32,7 @@ public class ChatroomUsers {
     private Chatroom chatroom;
 
     private long userId;
+    
+    private boolean activeFlag;
+    private boolean joinFlag;
 }

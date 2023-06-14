@@ -1,15 +1,11 @@
 package kr.co.talk.global.service.redis;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.global.exception.CustomError;
@@ -51,7 +47,7 @@ public class RedisService {
 
     /**
      * get value
-     * 
+     *
      * @param key
      * @return
      */
@@ -166,13 +162,13 @@ public class RedisService {
         }
     }
 
-    public void pushUserChatroom(String userId, String roomId) throws CustomException{
+    /**
+     * TODO //expire timeOut -> 대화 마감 알림 소켓에서 status 퇴장으로 set한 시간 - 대화방 입장한 시간
+     */
+    public void pushUserChatRoom(String userId, String roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;
-        if (valueOps.get(key) != null) {
-            throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
-        }
-        valueOps.set(key, roomId);
-        valueOps.getOperations().expire(key, 1, TimeUnit.MINUTES);
+        valueOps.setIfAbsent(key, roomId, Duration.ofMinutes(1)); // 값이 없을 때만 설정
+        redisTemplate.exec(); // Redis 트랜잭션 실행
     }
 
 }

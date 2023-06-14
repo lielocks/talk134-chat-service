@@ -8,6 +8,7 @@ import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.global.client.UserClient;
+import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
@@ -30,14 +31,17 @@ public class ChatService {
     private final RedisService redisService;
 
     @Transactional
-    public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) {
-        try {
-            redisService.pushUserChatroom(String.valueOf(chatEnterDto.getUserId()), String.valueOf(chatEnterDto.getRoomId()));
-        } catch (CustomException e) {
+    public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
+        String key = chatEnterDto.getUserId() + RedisConstants.CHATROOM;
+        redisService.pushUserChatRoom(String.valueOf(chatEnterDto.getUserId()), String.valueOf(chatEnterDto.getRoomId()));
+        String redisValue = redisService.getValues(key);
+        log.info("redis Value :: {}", redisValue);
+
+        if (!redisValue.equals(String.valueOf(chatEnterDto.getRoomId()))) {
             throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
         }
 
-        boolean flag = chatEnterDto.isSelected() ? true : false;
+        boolean flag = chatEnterDto.isSelected();
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {
             throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);

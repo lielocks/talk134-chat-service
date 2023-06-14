@@ -13,6 +13,8 @@ import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.global.constants.RedisConstants;
+import kr.co.talk.global.exception.CustomError;
+import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -110,5 +112,36 @@ public class RedisServiceTest {
 
 		redisTemplate.delete(key);
 	}
+
+//	@Test
+//	@DisplayName("pushUserChatRoom valueOps")
+//	void valueOps() throws JsonProcessingException{
+//		// given
+//		long userId = 123L;
+//		long roomId = 100L;
+//		String key = userId + RedisConstants.CHATROOM;
+//
+//		// when
+//		try {
+//			redisTemplate.multi();
+//			redisTemplate.opsForValue().setIfAbsent(String.valueOf(userId), String.valueOf(roomId));
+//			redisTemplate.exec();
+//			if (!redisService.getValues(key).equals(String.valueOf(roomId))) {
+//				throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
+//			}
+//		} catch (CustomException e) {
+//			log.error("error error error {}", e.getCustomError());
+//			assertEquals(e.getCustomError(), CustomError.CHATROOM_USER_ALREADY_JOINED);
+//		}
+//		String values = redisService.getValues(key);
+//		Long stringValue = objectMapper.readValue(values, Long.class);
+//
+//		// then
+//		assertEquals(stringValue, 100L);
+//		log.info("redisTemplate.hasKey() {}" , redisTemplate.hasKey(key));
+//		log.info("redisTemplate.vvvvvvvvvv() {}", stringValue);
+//
+//		redisTemplate.delete(key);
+//	}
 
 }

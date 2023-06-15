@@ -32,15 +32,11 @@ public class ChatService {
 
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
-        String key = chatEnterDto.getUserId() + RedisConstants.CHATROOM;
-        redisService.pushUserChatRoom(String.valueOf(chatEnterDto.getUserId()), String.valueOf(chatEnterDto.getRoomId()));
-        String redisValue = redisService.getValues(key);
-        log.info("redis Value :: {}", redisValue);
+        setUserInfoRedis(chatEnterDto);
+        return getResponseDto(chatEnterDto);
+    }
 
-        if (!redisValue.equals(String.valueOf(chatEnterDto.getRoomId()))) {
-            throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
-        }
-
+    private ChatEnterResponseDto getResponseDto(ChatEnterDto chatEnterDto) {
         boolean flag = chatEnterDto.isSelected();
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {
@@ -55,7 +51,7 @@ public class ChatService {
                 .collect(Collectors.toList());
         log.info("idList ::::::::::::::::::::::::: {} ", idList);
         if (idList == null) {
-            throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
+            throw new CustomException(CustomError.USER_DOES_NOT_EXIST);
         }
 
         List<RequestDto.ChatRoomEnterResponseDto> enterResponseDto = userClient.requiredEnterInfo(chatEnterDto.getUserId(), idList);
@@ -95,11 +91,34 @@ public class ChatService {
         return ChatEnterResponseDto.builder().chatUserInfoList(chatUserInfos).roomId(roomIdList).build();
     }
 
+    private void setUserInfoRedis(ChatEnterDto chatEnterDto) {
+        String key = chatEnterDto.getUserId() + RedisConstants.CHATROOM;
+        ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
+        if (chatroomUsersByUserId == null) {
+            throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
+        }
+        redisService.pushUserChatRoom(String.valueOf(chatEnterDto.getUserId()), String.valueOf(chatEnterDto.getRoomId()));
+        String redisValue = redisService.getValues(key);
+        log.info("redis Value :: {}", redisValue);
+        boolean b = redisValue.equals(String.valueOf(chatEnterDto.getRoomId()));
+
+        if (!b) {
+            throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
+        }
+    }
+
     public int socketFlagStatus(int socketFlag, ChatEnterDto chatEnterDto) {
         int flag = 0;
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
-        if (chatroom == null) {
-            throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
+        ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
+
+        //화면 전환으로 enterDto 가 초기값으로 설정되었을때
+        Integer currentSocketFlag = getChatroomUsers(chatroom).stream().map(user -> user.getSocketFlag()).findFirst().get();
+        if (socketFlag < currentSocketFlag) {
+            if (chatEnterDto.isSelected()) {
+                chatroomUsersByUserId.activeFlagOn(false);
+            }
+            return currentSocketFlag;
         }
 
         if (socketFlag == 0) {

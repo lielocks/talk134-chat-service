@@ -167,8 +167,8 @@ public class RedisService {
      */
     public void pushUserChatRoom(String userId, String roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;
-        valueOps.setIfAbsent(key, roomId, Duration.ofMinutes(1)); // 값이 없을 때만 설정
-        redisTemplate.exec(); // Redis 트랜잭션 실행
+        valueOps.setIfAbsent(key, roomId, Duration.ofMinutes(10));
+        redisTemplate.exec(); // redis transaction commit
     }
 
 }

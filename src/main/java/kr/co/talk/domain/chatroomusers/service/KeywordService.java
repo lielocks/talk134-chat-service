@@ -109,7 +109,8 @@ public class KeywordService {
 
     private TopicListDto createTopicListDto(Keyword keyword, Question question) {
         return TopicListDto.builder()
-                .keyword(keyword.getName())
+                .keywordId(keyword.getKeywordId())
+                .keywordName(keyword.getName())
                 .questionId(question.getQuestionId())
                 .questionName(question.getContent())
                 .depth(convertIdIntoDepth(question.getQuestionId()))

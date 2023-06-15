@@ -1,6 +1,5 @@
 package kr.co.talk.redis;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -10,7 +9,6 @@ import java.util.List;
 
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
-import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.service.redis.RedisService;
@@ -19,12 +17,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.discovery.converters.Auto;
 
 @SpringBootTest
 @Slf4j
@@ -100,7 +96,7 @@ public class RedisServiceTest {
 		KeywordSetDto keywordSetDto = KeywordSetDto.builder().userId(userId).roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
 
 		// when
-		redisService.pushQuestionList(String.valueOf(roomId), String.valueOf(userId), keywordSetDto);
+		redisService.pushQuestionList(roomId, userId, keywordSetDto);
 		List<String> list = redisService.getList(key);
 		KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
 
@@ -110,5 +106,6 @@ public class RedisServiceTest {
 
 		redisTemplate.delete(key);
 	}
+
 
 }

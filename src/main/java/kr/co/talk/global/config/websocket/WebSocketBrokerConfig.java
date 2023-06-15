@@ -21,6 +21,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
                         "http://localhost:3000",
                         "https://134.works"
                 )
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 

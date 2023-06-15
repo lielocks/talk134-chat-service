@@ -1,28 +1,22 @@
 package kr.co.talk.domain.chatroomusers.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
-import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
-import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
-import kr.co.talk.domain.chatroomusers.dto.TopicListDto;
+import kr.co.talk.domain.chatroomusers.dto.*;
 import kr.co.talk.domain.chatroomusers.entity.Keyword;
 import kr.co.talk.domain.chatroomusers.entity.Question;
 import kr.co.talk.domain.chatroomusers.repository.KeywordRepository;
 import kr.co.talk.domain.chatroomusers.repository.QuestionRepository;
-import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true)
+@Slf4j
 @RequiredArgsConstructor
 public class KeywordService {
 
@@ -58,12 +52,12 @@ public class KeywordService {
                 .collect(Collectors.toList());
 
         KeywordSetDto keywordSetDto = KeywordSetDto.builder().roomId(keywordSendDto.getRoomId()).keywordCode(keywordCode).questionCode(questionCode).build();
-        redisService.pushQuestionList(String.valueOf(keywordSendDto.getRoomId()), String.valueOf(userId), keywordSetDto);
+        redisService.pushQuestionList(keywordSendDto.getRoomId(), userId, keywordSetDto);
         return responseDto;
     }
 
     public void setQuestionOrder(long userId, QuestionCodeDto listDto) {
-        redisService.setQuestionCode(String.valueOf(userId), String.valueOf(listDto.getRoomId()), listDto);
+        redisService.setQuestionCode(userId, listDto.getRoomId(), listDto);
     }
 
 }

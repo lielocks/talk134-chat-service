@@ -96,7 +96,7 @@ public class RedisServiceTest {
 		KeywordSetDto keywordSetDto = KeywordSetDto.builder().userId(userId).roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
 
 		// when
-		redisService.pushQuestionList(String.valueOf(roomId), String.valueOf(userId), keywordSetDto);
+		redisService.pushQuestionList(roomId, userId, keywordSetDto);
 		List<String> list = redisService.getList(key);
 		KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
 

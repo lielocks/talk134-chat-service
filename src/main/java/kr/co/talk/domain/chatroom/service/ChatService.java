@@ -31,12 +31,12 @@ public class ChatService {
     private final RedisService redisService;
 
     @Transactional
-    public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
+    public List<ChatEnterResponseDto> sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
         return getResponseDto(chatEnterDto);
     }
 
-    private ChatEnterResponseDto getResponseDto(ChatEnterDto chatEnterDto) {
+    private List<ChatEnterResponseDto> getResponseDto(ChatEnterDto chatEnterDto) {
         boolean flag = chatEnterDto.isSelected();
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {
@@ -49,7 +49,7 @@ public class ChatService {
         List<Long> idList = chatroomUsers.stream()
                 .map(ChatroomUsers::getUserId)
                 .collect(Collectors.toList());
-        log.info("idList ::::::::::::::::::::::::: {} ", idList);
+
         if (idList == null) {
             throw new CustomException(CustomError.USER_DOES_NOT_EXIST);
         }
@@ -67,7 +67,7 @@ public class ChatService {
         });
 
         int finalFlag = socketFlagStatus(chatEnterDto.getSocketFlag(), chatEnterDto);
-        List<ChatEnterResponseDto.ChatUserInfo> chatUserInfos = new ArrayList<>();
+        List<ChatEnterResponseDto> chatUserInfos = new ArrayList<>();
         for (Long userId : idList) {
 
             RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.stream()
@@ -77,7 +77,7 @@ public class ChatService {
 
             ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), userId);
 
-            ChatEnterResponseDto.ChatUserInfo responseUserInfo = new ChatEnterResponseDto.ChatUserInfo(
+            ChatEnterResponseDto responseUserInfo = new ChatEnterResponseDto(
                     enterDto.getUserId(),
                     enterDto.getNickname(),
                     enterDto.getUserName(),
@@ -88,7 +88,7 @@ public class ChatService {
             chatUserInfos.add(responseUserInfo);
         }
 
-        return ChatEnterResponseDto.builder().chatUserInfoList(chatUserInfos).roomId(roomIdList).build();
+        return chatUserInfos;
     }
 
     private void setUserInfoRedis(ChatEnterDto chatEnterDto) {

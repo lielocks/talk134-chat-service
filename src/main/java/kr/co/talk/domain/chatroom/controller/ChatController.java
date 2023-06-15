@@ -13,6 +13,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -24,7 +26,7 @@ public class ChatController {
     @MessageMapping("/enter")
     public void message(@Payload ChatEnterDto chatEnterDto) {
         try {
-            ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
+            List<ChatEnterResponseDto> responseDto = chatService.sendChatMessage(chatEnterDto);
             log.info("full ResponseDto :: {} ", responseDto);
             template.convertAndSend(getRoomDestination(chatEnterDto.getRoomId()), responseDto);
         } catch (CustomException e) {

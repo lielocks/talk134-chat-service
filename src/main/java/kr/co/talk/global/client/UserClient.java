@@ -47,4 +47,8 @@ public interface UserClient {
 
     @GetMapping(value = "/user/enter-info/{userList}")
     List<ChatRoomEnterResponseDto> requiredEnterInfo(@RequestHeader("userId") long userId, @PathVariable List<Long> userList);
+
+    @GetMapping(value = "/user/img-code")
+    String getUserImgCode(@RequestHeader("userId") long userId);
+
 }

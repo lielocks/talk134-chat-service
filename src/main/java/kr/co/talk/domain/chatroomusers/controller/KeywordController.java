@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import java.util.List;
 
 @Slf4j
@@ -18,7 +19,6 @@ import java.util.List;
 public class KeywordController {
 
     private final KeywordService keywordService;
-    private final RedisService redisService;
 
     @PostMapping("/select-keyword")
     public List<TopicListDto> selectKeywordChatroom(@RequestHeader long userId, @RequestBody KeywordSendDto sendDto) {

@@ -1,8 +1,10 @@
 package kr.co.talk.domain.chatroomusers.service;
 
 import kr.co.talk.domain.chatroomusers.dto.*;
+import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.entity.Keyword;
 import kr.co.talk.domain.chatroomusers.entity.Question;
+import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.domain.chatroomusers.repository.KeywordRepository;
 import kr.co.talk.domain.chatroomusers.repository.QuestionRepository;
 import kr.co.talk.global.client.UserClient;
@@ -23,6 +25,7 @@ public class KeywordService {
 
     private final KeywordRepository keywordRepository;
     private final QuestionRepository questionRepository;
+    private final ChatroomUsersRepository usersRepository;
     private final RedisService redisService;
     private final UserClient userClient;
 
@@ -69,8 +72,17 @@ public class KeywordService {
         return responseDto;
     }
 
-    public void setQuestionOrder(long userId, QuestionCodeDto listDto) {
-        redisService.setQuestionCode(userId, listDto.getRoomId(), listDto);
+    public AllRegisteredDto setQuestionOrder(long userId, QuestionCodeDto listDto) {
+        boolean registered;
+        List<Long> questionCode = redisService.findQuestionCode(listDto.getRoomId(), userId);
+
+        if (!questionCode.containsAll(listDto.getQuestionCodeList())) {
+            throw new CustomException(CustomError.QUESTION_ID_NOT_MATCHED);
+        }
+        Long countValue = redisService.setQuestionCode(userId, listDto.getRoomId(), listDto);
+        List<ChatroomUsers> users = usersRepository.findChatroomUsersByChatroom_ChatroomId(listDto.getRoomId());
+        registered = users.size() == countValue;
+        return AllRegisteredDto.builder().allRegistered(registered).build();
     }
 
     public Integer setUserStatusMap(long userId) {

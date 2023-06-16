@@ -17,6 +17,8 @@ public enum CustomError {
     QUESTION_LIST_SIZE_MISMATCH(4003, "해당 리스트의 질문 갯수가 3이 아닙니다.", HttpStatus.BAD_REQUEST.value()),
     CHATROOM_USER_ALREADY_JOINED(4004, "이미 참가하신 채팅방이 존재합니다.", HttpStatus.BAD_REQUEST.value()),
     QUESTION_ALREADY_REGISTERED(4005, "이미 질문을 등록하였습니다.", HttpStatus.BAD_REQUEST.value()),
+    QUESTION_ID_NOT_MATCHED (4006, "등록하신 질문이 아닙니다.", HttpStatus.BAD_REQUEST.value()),
+    QUESTION_ORDER_CHANCE_ONCE (4007, "질문 카드 순서 등록은 1회 가능합니다.", HttpStatus.BAD_REQUEST.value()),
 
     // 공통
     SERVER_ERROR(3000, "알수 없는 문제가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()),

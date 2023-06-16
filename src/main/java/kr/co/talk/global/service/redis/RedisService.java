@@ -34,14 +34,14 @@ public class RedisService {
     private ValueOperations<String, String> valueOps;
     private ValueOperations<String, Integer> integerValueOps;
     private ListOperations<String, String> opsForList;
-    private HashOperations<String, String, String> opsForNoticeMap;
+    private HashOperations<String, String, String> opsForMap;
 
     @PostConstruct
     public void init() {
         valueOps = stringRedisTemplate.opsForValue();
         integerValueOps = integerRedisTemplate.opsForValue();
         opsForList = redisTemplate.opsForList();
-        opsForNoticeMap = chatroomNoticeDtoRedisTemplate.opsForHash();
+        opsForMap = redisTemplate.opsForHash();
     }
 
     /**
@@ -94,29 +94,24 @@ public class RedisService {
         }).collect(Collectors.toList());
 
     }
-
-    /**
-     * 채팅방이 생성될때 redis에 저장 생성되고나서 5분전, 끝날때 알림
-     * 
-     * @param key
-     * @param chatroomNoticeDto
-     */
-    public void pushNoticeMap(String roomId, ChatroomNoticeDto chatroomNoticeDto) {
+    
+    
+    public void pushMap(String key, String fieldKey, Object value) {
         try {
-            String writeValueAsString = objectMapper.writeValueAsString(chatroomNoticeDto);
-            opsForNoticeMap.put(RedisConstants.ROOM_NOTICE, roomId, writeValueAsString);
+            String writeValueAsString = objectMapper.writeValueAsString(value);
+            opsForMap.put(key, fieldKey, writeValueAsString);
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
             throw new RuntimeException(e);
         }
     }
-
-    public Map<String, ChatroomNoticeDto> getChatroomNoticeEntry() {
-        Map<String, String> entries = opsForNoticeMap.entries(RedisConstants.ROOM_NOTICE);
+    
+    public Map<String, Object> getEntry(String key, Class<?> clazz) {
+        Map<String, String> entries = opsForMap.entries(key);
         return entries.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(),
                 e -> {
                     try {
-                        return objectMapper.readValue(e.getValue(), ChatroomNoticeDto.class);
+                        return objectMapper.readValue(e.getValue(), clazz);
                     } catch (JsonProcessingException e1) {
                         log.error("json parse error", e);
                     }
@@ -124,8 +119,8 @@ public class RedisService {
                 }));
     }
 
-    public void deleteChatroomNotice(String roomId) {
-        opsForNoticeMap.delete(RedisConstants.ROOM_NOTICE, roomId);
+    public void deleteMap(String key, String fieldKey) {
+        opsForMap.delete(key, fieldKey);
     }
 
     public void pushQuestionList(long roomId, long userId, KeywordSetDto keywordSetDto) {

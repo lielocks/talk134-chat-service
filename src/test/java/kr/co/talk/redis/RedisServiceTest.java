@@ -93,7 +93,7 @@ public class RedisServiceTest {
 		List<Long> questionCode = Arrays.asList(5L, 10L, 15L);
 		List<Long> keywordCode = Arrays.asList(1L, 2L, 3L);
 		String key = roomId + "_" + userId + RedisConstants.QUESTION;
-		KeywordSetDto keywordSetDto = KeywordSetDto.builder().userId(userId).roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
+		KeywordSetDto keywordSetDto = KeywordSetDto.builder().roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
 
 		// when
 		redisService.pushQuestionList(roomId, userId, keywordSetDto);

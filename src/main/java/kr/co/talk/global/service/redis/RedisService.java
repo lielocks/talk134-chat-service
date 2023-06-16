@@ -1,23 +1,16 @@
 package kr.co.talk.global.service.redis;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,22 +27,26 @@ import lombok.extern.slf4j.Slf4j;
 public class RedisService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, String> chatroomNoticeDtoRedisTemplate;
+    private final RedisTemplate<String, Integer> integerRedisTemplate;
     private final ObjectMapper objectMapper;
 
     private ValueOperations<String, String> valueOps;
+    private ValueOperations<String, Integer> integerValueOps;
     private ListOperations<String, String> opsForList;
     private HashOperations<String, String, String> opsForMap;
 
     @PostConstruct
     public void init() {
         valueOps = stringRedisTemplate.opsForValue();
+        integerValueOps = integerRedisTemplate.opsForValue();
         opsForList = redisTemplate.opsForList();
         opsForMap = redisTemplate.opsForHash();
     }
 
     /**
      * get value
-     * 
+     *
      * @param key
      * @return
      */
@@ -126,18 +123,25 @@ public class RedisService {
         opsForMap.delete(key, fieldKey);
     }
 
-    public void pushQuestionList(String roomId, String userId, KeywordSetDto keywordSetDto) {
+    public void pushQuestionList(long roomId, long userId, KeywordSetDto keywordSetDto) {
         try {
             String writeValueAsString = objectMapper.writeValueAsString(keywordSetDto);
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
-            opsForList.leftPush(key, writeValueAsString);
+            List<String> list = getList(key);
+
+            if (list == null || list.isEmpty()) {
+                opsForList.leftPush(key, writeValueAsString);
+            } else {
+                throw new CustomException(CustomError.QUESTION_ALREADY_REGISTERED);
+            }
+
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
             throw new RuntimeException(e);
         }
     }
 
-    public void setQuestionCode(String userId, String roomId, QuestionCodeDto listDto) {
+    public Long setQuestionCode(long userId, long roomId, QuestionCodeDto listDto) {
         try {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
             List<String> valueList = getList(key);
@@ -150,13 +154,57 @@ public class RedisService {
             for (int i = 0; i < listDto.getQuestionCodeList().size(); i++) {
                 firstCode.set(i, listDto.getQuestionCodeList().get(i));
             }
-
+            keywordDtoValue.setRegisteredQuestionOrder(keywordDtoValue.getRegisteredQuestionOrder() + 1);
             valueList.set(0, objectMapper.writeValueAsString(keywordDtoValue));
             redisTemplate.opsForList().set(key, 0, valueList.get(0));
+
+            if (keywordDtoValue.getRegisteredQuestionOrder() > 1) {
+                throw new CustomException(CustomError.QUESTION_ORDER_CHANCE_ONCE);
+            } else {
+                return incrementCount(roomId);
+            }
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
             throw new RuntimeException(e);
         }
+    }
+
+    public List<Long> findQuestionCode(long roomId, long userId) {
+        try {
+            String key = roomId + "_" + userId + RedisConstants.QUESTION;
+            List<String> list = getList(key);
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
+            List<Long> questionCode = keywordDtoValue.getQuestionCode();
+            return questionCode;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Long> findKeywordCode(long roomId, long userId) {
+        try {
+            String key = roomId + "_" + userId + RedisConstants.QUESTION;
+            List<String> list = getList(key);
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
+            List<Long> keywordCode = keywordDtoValue.getKeywordCode();
+            return keywordCode;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * TODO //expire timeOut -> 대화 마감 알림 소켓에서 status 퇴장으로 set한 시간 - 대화방 입장한 시간
+     */
+    public void pushUserChatRoom(String userId, String roomId) throws CustomException {
+        String key = userId + RedisConstants.CHATROOM;
+        valueOps.setIfAbsent(key, roomId, Duration.ofMinutes(10));
+        redisTemplate.exec(); // redis transaction commit
+    }
+
+    public Long incrementCount(long roomId) {
+        String countKey = roomId + RedisConstants.COUNT;
+        return integerValueOps.increment(countKey);
     }
 
 }

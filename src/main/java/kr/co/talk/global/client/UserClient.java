@@ -64,4 +64,8 @@ public interface UserClient {
     
     @PutMapping("/user/changeStatus/{userId}")
     ResponseEntity<?> changeStatus(@PathVariable("userId") long userId, UserStatusDto updateRequestStatusDto);
+
+    @GetMapping(value = "/user/img-code")
+    String getUserImgCode(@RequestHeader("userId") long userId);
+
 }

@@ -30,9 +30,4 @@ public class KeywordController {
     public AllRegisteredDto questionOrder(@RequestHeader long userId, @RequestBody QuestionCodeDto codeDto) {
         return keywordService.setQuestionOrder(userId, codeDto);
     }
-
-    @GetMapping("/is-right")
-    public boolean isRight() {
-        return redisService.isWithin24Hours(53L, 101L);
-    }
 }

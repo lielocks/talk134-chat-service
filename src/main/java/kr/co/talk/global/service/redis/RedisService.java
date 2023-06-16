@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import kr.co.talk.domain.chatroomusers.dto.CountRedisDto;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.global.exception.CustomError;
@@ -29,15 +28,18 @@ public class RedisService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisTemplate<String, String> chatroomNoticeDtoRedisTemplate;
+    private final RedisTemplate<String, Integer> integerRedisTemplate;
     private final ObjectMapper objectMapper;
 
     private ValueOperations<String, String> valueOps;
+    private ValueOperations<String, Integer> integerValueOps;
     private ListOperations<String, String> opsForList;
     private HashOperations<String, String, String> opsForNoticeMap;
 
     @PostConstruct
     public void init() {
         valueOps = stringRedisTemplate.opsForValue();
+        integerValueOps = integerRedisTemplate.opsForValue();
         opsForList = redisTemplate.opsForList();
         opsForNoticeMap = chatroomNoticeDtoRedisTemplate.opsForHash();
     }
@@ -144,7 +146,7 @@ public class RedisService {
         }
     }
 
-    public void setQuestionCode(long userId, long roomId, QuestionCodeDto listDto) {
+    public Long setQuestionCode(long userId, long roomId, QuestionCodeDto listDto) {
         try {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
             List<String> valueList = getList(key);
@@ -157,9 +159,15 @@ public class RedisService {
             for (int i = 0; i < listDto.getQuestionCodeList().size(); i++) {
                 firstCode.set(i, listDto.getQuestionCodeList().get(i));
             }
-
+            keywordDtoValue.setRegisteredQuestionOrder(keywordDtoValue.getRegisteredQuestionOrder() + 1);
             valueList.set(0, objectMapper.writeValueAsString(keywordDtoValue));
             redisTemplate.opsForList().set(key, 0, valueList.get(0));
+
+            if (keywordDtoValue.getRegisteredQuestionOrder() > 1) {
+                throw new CustomException(CustomError.QUESTION_ORDER_CHANCE_ONCE);
+            } else {
+                return incrementCount(roomId);
+            }
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
             throw new RuntimeException(e);
@@ -199,34 +207,9 @@ public class RedisService {
         redisTemplate.exec(); // redis transaction commit
     }
 
-    public void getRegisteredCount(long userId, String roomId) {
+    public Long incrementCount(long roomId) {
         String countKey = roomId + RedisConstants.COUNT;
-        String listKey = roomId + "_" + userId + RedisConstants.QUESTION;
-
-        List<String> countValues = getList(countKey);
-        CountRedisDto countDto;
-        try {
-            if (countValues != null && !countValues.isEmpty()) {
-                countDto = objectMapper.readValue(countValues.get(0), CountRedisDto.class);
-            } else {
-                countDto = new CountRedisDto(userId, Long.parseLong(roomId), 1);
-            }
-
-            int count = countDto.getCount();
-            log.info("count :: {}", count);
-            if (getList(listKey).size() > 0) {
-                count++;
-            }
-
-            countDto.setCount(count);
-            if (countDto.getRoomId() != Long.parseLong(roomId) && countDto.getUserId() != userId) {
-                pushList(countKey, countDto);
-            }
-
-        } catch (JsonProcessingException e) {
-            log.error("json parse error", e);
-            throw new RuntimeException(e);
-        }
+        return integerValueOps.increment(countKey);
     }
 
 }

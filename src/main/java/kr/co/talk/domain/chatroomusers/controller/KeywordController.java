@@ -1,15 +1,14 @@
 package kr.co.talk.domain.chatroomusers.controller;
 
+import kr.co.talk.domain.chatroomusers.dto.AllRegisteredDto;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.domain.chatroomusers.dto.TopicListDto;
 import kr.co.talk.domain.chatroomusers.service.KeywordService;
-import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.criteria.CriteriaBuilder;
 import java.util.List;
 
 @Slf4j
@@ -26,7 +25,7 @@ public class KeywordController {
     }
 
     @PostMapping("/question-order")
-    public void questionOrder(@RequestHeader long userId, @RequestBody QuestionCodeDto codeDto) {
-        keywordService.setQuestionOrder(userId, codeDto);
+    public AllRegisteredDto questionOrder(@RequestHeader long userId, @RequestBody QuestionCodeDto codeDto) {
+        return keywordService.setQuestionOrder(userId, codeDto);
     }
 }

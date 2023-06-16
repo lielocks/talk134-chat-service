@@ -48,4 +48,14 @@ public class RedisConfig {
         return stringRedisTemplate;
     }
 
+    @Bean
+    public RedisTemplate<String, Integer> integerRedisTemplate() {
+        RedisTemplate<String, Integer> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setEnableTransactionSupport(true);
+        return redisTemplate;
+    }
+
 }

@@ -7,7 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TopicListDto {
-    private String keyword;
+    private Long keywordId;
+    private String keywordName;
     private Long questionId;
     private String questionName;
     private String depth;

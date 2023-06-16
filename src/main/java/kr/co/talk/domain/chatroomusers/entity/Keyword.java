@@ -16,7 +16,6 @@ public class Keyword {
     private Long keywordId;
 
     private String name;
-    private String depth;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "keyword", fetch = FetchType.LAZY)
     private List<Question> questions;

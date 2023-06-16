@@ -43,6 +43,7 @@ public class ChatRoomService {
 	private final ChatroomUsersRepository chatroomUsersRepository;
 	private final RedisService redisService;
 	private final UserClient userClient;
+	private final ChatRoomSender chatRoomSender;
 
 	/**
 	 * 닉네임 또는 이름으로 채팅방 목록 조회
@@ -203,6 +204,8 @@ public class ChatRoomService {
 				.build();
 
 		userClient.changeStatus(userId, updateRequestStatusDto);
+		
 		// kafka를 통해 채팅방 종료 이벤트 메세지 보냄
+		chatRoomSender.sendEndChatting(feedback.getRoomId());
 	}
 }

@@ -10,6 +10,8 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.talk.global.constants.KafkaConstants;
+import kr.co.talk.global.exception.CustomError;
+import kr.co.talk.global.exception.CustomException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,13 +28,18 @@ public class ChatRoomSender {
     private final ObjectMapper objectMapper;
 //    private final ChatRedisService chatRedisService;
 
-    public void sendEndChatting(long roomId) throws JsonProcessingException {
+    public void sendEndChatting(long roomId)  {
         KafkaEndChatroomDTO chatroomDTO = KafkaEndChatroomDTO.builder()
                 .roomId(roomId)
                 .localDateTime(LocalDateTime.now())
                 .build();
 
-        String jsonInString = objectMapper.writeValueAsString(chatroomDTO);
+        String jsonInString = "";
+        try {
+            jsonInString = objectMapper.writeValueAsString(chatroomDTO);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         ListenableFuture<SendResult<String, String>> future =
                 kafkaTemplate.send(KafkaConstants.TOPIC_END_CHATTING,
@@ -49,8 +56,8 @@ public class ChatRoomSender {
 
             @Override
             public void onFailure(Throwable ex) {
-                // TODO 실패 처리
-                log.info("unable to send message roomId=[{}] due to : {}", roomId, ex.getMessage());
+                log.error("unable to send message roomId=[{}] due to : {}", roomId, ex.getMessage());
+                throw new CustomException(CustomError.END_CHATROOM_SAVE_ERROR);
             }
         });
     }
@@ -79,36 +86,6 @@ public class ChatRoomSender {
         });
     }
 
-    // Kafka Producer
-//    public List<ChatDto> sendMessageToKafka(ChatroomSendDto sendDto) throws JsonProcessingException {
-//
-//        ObjectMapper objectMapper = new ObjectMapper()
-//                .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-//
-//        String jsonInString = objectMapper.writeValueAsString(sendDto);
-//
-//        ListenableFuture<SendResult<String, String>> future =
-//                kafkaTemplate.send(KafkaConstants.TOPIC_CHAT, jsonInString);
-//
-//        future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-//
-//            @Override
-//            public void onSuccess(SendResult<String, String> result) {
-//                RecordMetadata recordMetadata = result.getRecordMetadata();
-//                log.info("sent topic=[{}] roodId [{}] with offset=[{}]", recordMetadata.topic(),
-//                        sendDto.getRoomId(),
-//                        recordMetadata.offset());
-//            }
-//
-//            @Override
-//            public void onFailure(Throwable ex) {
-//                // TODO 실패 처리
-//                log.info("unable to send message roomId=[{}] due to : {}", sendDto.getRoomId(), ex.getMessage());
-//            }
-//        });
-//
-//        return chatRedisService.sendChatroomDto(sendDto.getRoomId(), ChatDto.builder().name("name").nickname("nickname").activeFlag(true).build());
-//    }
 
 
     @Builder

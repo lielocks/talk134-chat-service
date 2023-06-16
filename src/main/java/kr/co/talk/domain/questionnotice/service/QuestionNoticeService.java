@@ -6,6 +6,7 @@ import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto;
 import kr.co.talk.global.client.UserClient;
+import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
@@ -13,7 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -26,21 +29,33 @@ public class QuestionNoticeService {
 
     @Transactional(readOnly = true)
     public QuestionNoticeResponseDto getQuestionNotice(long roomId) {
+        List<String> list = test(roomId);
+        if (CollectionUtils.isEmpty(list)) {
+            
+        }
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(roomId);
-        var userList = chatroomUsersRepository.findChatroomUsersByChatroom(chatroom);
-        if (userList.isEmpty()) {
+        var chatroomUsersList = chatroomUsersRepository.findChatroomUsersByChatroom(chatroom);
+        if (chatroomUsersList.isEmpty()) {
             throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
         }
-        var userInfoList = userClient.requiredEnterInfo(0, userList.stream()
+        var userList = userClient.requiredEnterInfo(0, chatroomUsersList.stream()
                 .map(ChatroomUsers::getUserId)
                 .collect(Collectors.toUnmodifiableList()));
-        var randomUser = userInfoList.get(RandomUtils.nextInt(userInfoList.size()));
+        var randomUser = userList.get(RandomUtils.nextInt(userList.size()));
         // TODO: redis에서 값 읽어오고 순서처리
 //        List<Long> questionCodes = redisService.findQuestionCode(roomId, randomUser.getUserId());
         // TODO: topic 세팅
         return QuestionNoticeResponseDto.builder()
                 .speaker(randomUser)
-                .userList(userInfoList)
+                .userList(userList)
                 .build();
+    }
+
+    private List<String> test(long roomId) {
+        return redisService.getList(getKey(roomId));
+    }
+
+    private String getKey(long roomId) {
+        return String.format("%s_%s", roomId, RedisConstants.QUESTION_NOTICE);
     }
 }

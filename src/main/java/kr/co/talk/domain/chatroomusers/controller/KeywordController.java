@@ -5,7 +5,6 @@ import kr.co.talk.domain.chatroomusers.dto.KeywordSendDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.domain.chatroomusers.dto.TopicListDto;
 import kr.co.talk.domain.chatroomusers.service.KeywordService;
-import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +18,6 @@ import java.util.List;
 public class KeywordController {
 
     private final KeywordService keywordService;
-    private final RedisService redisService;
 
     @PostMapping("/select-keyword")
     public List<TopicListDto> selectKeywordChatroom(@RequestHeader long userId, @RequestBody KeywordSendDto sendDto) {

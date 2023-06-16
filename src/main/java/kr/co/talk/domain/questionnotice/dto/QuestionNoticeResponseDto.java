@@ -1,5 +1,6 @@
-package kr.co.talk.domain.chatroom.dto;
+package kr.co.talk.domain.questionnotice.dto;
 
+import kr.co.talk.domain.chatroom.dto.RequestDto;
 import lombok.Builder;
 import lombok.Data;
 

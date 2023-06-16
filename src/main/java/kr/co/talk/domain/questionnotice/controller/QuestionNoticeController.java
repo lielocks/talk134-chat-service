@@ -1,7 +1,7 @@
-package kr.co.talk.domain.chatroom.controller;
+package kr.co.talk.domain.questionnotice.controller;
 
-import kr.co.talk.domain.chatroom.dto.QuestionNoticeResponseDto;
-import kr.co.talk.domain.chatroom.service.QuestionNoticeService;
+import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto;
+import kr.co.talk.domain.questionnotice.service.QuestionNoticeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;

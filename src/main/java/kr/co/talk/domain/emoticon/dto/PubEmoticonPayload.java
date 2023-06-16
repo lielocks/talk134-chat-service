@@ -1,4 +1,4 @@
-package kr.co.talk.domain.chatroom.dto;
+package kr.co.talk.domain.emoticon.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

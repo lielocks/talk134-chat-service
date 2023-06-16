@@ -1,10 +1,10 @@
-package kr.co.talk.domain.chatroom.service;
+package kr.co.talk.domain.questionnotice.service;
 
-import kr.co.talk.domain.chatroom.dto.QuestionNoticeResponseDto;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
+import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto;
 import kr.co.talk.global.client.UserClient;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
@@ -14,7 +14,6 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor

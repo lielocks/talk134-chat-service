@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.FindChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserStatusDto;
@@ -35,8 +36,8 @@ public interface UserClient {
      * @param userId
      * @return
      */
-    @GetMapping(value = "/user/teamCode/{userId}")
-    TeamCodeResponseDto getTeamCode(@PathVariable(value = "userId") long userId);
+    @GetMapping(value = "/user/findChatroomInfo/{userId}")
+    FindChatroomResponseDto findChatroomInfo(@PathVariable(value = "userId") long userId);
 
     /**
      * user-service로부터 timeout get

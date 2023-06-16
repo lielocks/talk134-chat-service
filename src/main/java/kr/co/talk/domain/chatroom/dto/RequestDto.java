@@ -24,6 +24,13 @@ public class RequestDto {
     public static class TeamCodeResponseDto {
         private String teamCode;
     }
+    
+
+    @Data
+    public static class FindChatroomResponseDto {
+        private String teamCode;
+        private String userRole;
+    }
 
     /**
      * user-service

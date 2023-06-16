@@ -17,12 +17,15 @@ public class ControllerAdvice {
                 HttpStatus.valueOf(e.getCustomError().getStatusCode()));
     }
     
-    
-    @ExceptionHandler(FeignException.class)
-    public ResponseEntity<?> feignException(FeignException e) {
-        return new ResponseEntity<>(ErrorDto.createErrorDto(CustomError.FEIGN_ERROR),
-                HttpStatus.valueOf(CustomError.FEIGN_ERROR.getStatusCode()));
-    }
+	@ExceptionHandler(FeignException.class)
+	public ResponseEntity<?> feignException(FeignException e) {
+		if (e.status() == 404) {
+			return new ResponseEntity<>(ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST),
+					HttpStatus.valueOf(CustomError.USER_DOES_NOT_EXIST.getStatusCode()));
+		}
+		return new ResponseEntity<>(ErrorDto.createErrorDto(CustomError.FEIGN_ERROR),
+				HttpStatus.valueOf(CustomError.FEIGN_ERROR.getStatusCode()));
+	}
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> commonException(Exception e) {

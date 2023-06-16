@@ -26,11 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatRoomSender {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-//    private final ChatRedisService chatRedisService;
+    // private final ChatRedisService chatRedisService;
 
-    public void sendEndChatting(long roomId)  {
+    public void sendEndChatting(long roomId, long userId) {
         KafkaEndChatroomDTO chatroomDTO = KafkaEndChatroomDTO.builder()
                 .roomId(roomId)
+                .userId(userId)
                 .localDateTime(LocalDateTime.now())
                 .build();
 
@@ -56,36 +57,12 @@ public class ChatRoomSender {
 
             @Override
             public void onFailure(Throwable ex) {
-                log.error("unable to send message roomId=[{}] due to : {}", roomId, ex.getMessage());
+                log.error("unable to send message roomId=[{}] due to : {}", roomId,
+                        ex.getMessage());
                 throw new CustomException(CustomError.END_CHATROOM_SAVE_ERROR);
             }
         });
     }
-
-    public void test_send() {
-        ListenableFuture<SendResult<String, String>> future =
-                kafkaTemplate.send("test_topic", "test1");
-//        ListenableFuture<SendResult<String, String>> future =
-//                kafkaTemplate.send("test_topic", "key1", "test1"); // partition 지정
-        future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-
-            @Override
-            public void onSuccess(SendResult<String, String> result) {
-                RecordMetadata recordMetadata = result.getRecordMetadata();
-                log.info("recordMetadata :: " + recordMetadata);
-                log.info("partition:::" + recordMetadata.partition());
-                log.info("offset:::" + recordMetadata.offset());
-            }
-
-            @Override
-            public void onFailure(Throwable ex) {
-                // TODO Auto-generated method stub
-
-            }
-
-        });
-    }
-
 
 
     @Builder
@@ -94,7 +71,7 @@ public class ChatRoomSender {
     @AllArgsConstructor(access = AccessLevel.PROTECTED)
     private static class KafkaEndChatroomDTO {
         private long roomId;
+        private long userId;
         private LocalDateTime localDateTime;
-        // TODO 메시지 보낼게 더 있을지...
     }
 }

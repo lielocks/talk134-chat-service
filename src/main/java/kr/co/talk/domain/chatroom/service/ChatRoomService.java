@@ -206,6 +206,6 @@ public class ChatRoomService {
 		userClient.changeStatus(userId, updateRequestStatusDto);
 		
 		// kafka를 통해 채팅방 종료 이벤트 메세지 보냄
-		chatRoomSender.sendEndChatting(feedback.getRoomId());
+		chatRoomSender.sendEndChatting(feedback.getRoomId(), userId);
 	}
 }

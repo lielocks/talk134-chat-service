@@ -201,15 +201,43 @@ public class RedisService {
     /**
      * TODO //expire timeOut -> 대화 마감 알림 소켓에서 status 퇴장으로 set한 시간 - 대화방 입장한 시간
      */
-    public void pushUserChatRoom(String userId, String roomId) throws CustomException {
+    public void pushUserChatRoom(long userId, long roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;
-        valueOps.setIfAbsent(key, roomId, Duration.ofMinutes(10));
-        redisTemplate.exec(); // redis transaction commit
+        valueOps.setIfAbsent(key, String.valueOf(roomId), Duration.ofMinutes(10));
     }
+
 
     public Long incrementCount(long roomId) {
         String countKey = roomId + RedisConstants.COUNT;
         return integerValueOps.increment(countKey);
+    }
+
+    public void roomCreateTime (long roomId, long userId) {
+        String timeKey = userId + "_" + roomId + RedisConstants.TIME;
+        valueOps.setIfAbsent(timeKey, String.valueOf(System.currentTimeMillis()), Duration.ofDays(1));
+        redisTemplate.multi(); // chat service 에서 pushUserChatRoom 후 multi 로 transaction 열어줌
+        redisTemplate.exec();
+    }
+
+    public boolean isWithin24Hours(long roomId, long userId) {
+        String timeKey = userId + "_" + roomId + RedisConstants.TIME;
+        String timeValueStr = getValues(timeKey);
+        if (timeValueStr == null || timeValueStr.isEmpty()) {
+            return false;
+        }
+
+        try {
+            long timeValue = Long.parseLong(timeValueStr);
+            long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
+            long storedTimeSeconds = timeValue / 1000; // room 생성된 시간
+            long timeDifference = currentTime - storedTimeSeconds;
+            long twentyFourHoursInSeconds = 24 * 60 * 60;
+
+            return timeDifference <= twentyFourHoursInSeconds;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
     }
 
 }

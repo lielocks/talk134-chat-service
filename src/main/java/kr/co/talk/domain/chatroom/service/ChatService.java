@@ -97,7 +97,8 @@ public class ChatService {
         if (chatroomUsersByUserId == null) {
             throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
         }
-        redisService.pushUserChatRoom(String.valueOf(chatEnterDto.getUserId()), String.valueOf(chatEnterDto.getRoomId()));
+        redisService.pushUserChatRoom(chatEnterDto.getUserId(), chatEnterDto.getRoomId());
+        redisService.roomCreateTime(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
         String redisValue = redisService.getValues(key);
         log.info("redis Value :: {}", redisValue);
         boolean b = redisValue.equals(String.valueOf(chatEnterDto.getRoomId()));

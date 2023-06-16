@@ -3,6 +3,8 @@ package kr.co.talk.domain.chatroomusers.entity;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -15,6 +17,8 @@ public class Question {
     private Long questionId;
 
     private String content;
+
+    private int statusMap;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "keyword_id")

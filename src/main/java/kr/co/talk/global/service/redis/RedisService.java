@@ -131,7 +131,7 @@ public class RedisService {
             String writeValueAsString = objectMapper.writeValueAsString(keywordSetDto);
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
             List<String> list = getList(key);
-            log.info("list list list :: {}", list);
+
             if (list == null || list.isEmpty()) {
                 opsForList.leftPush(key, writeValueAsString);
             } else {

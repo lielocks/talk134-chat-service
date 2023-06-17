@@ -255,7 +255,7 @@ public class RedisService {
             long storedTimeSeconds = earliestTimeValue / 1000; // room 생성된 시간
             long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
             long timeDifference = currentTime - storedTimeSeconds;
-            long tenMinutesInSeconds = 60 * 1;
+            long tenMinutesInSeconds = 60 * 10;
             log.info("timeDifference >= tenMinutesInSeconds :: {}", timeDifference >= tenMinutesInSeconds);
 
             return timeDifference >= tenMinutesInSeconds;

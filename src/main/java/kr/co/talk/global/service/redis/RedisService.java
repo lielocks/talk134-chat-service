@@ -8,6 +8,7 @@ import javax.annotation.PostConstruct;
 
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
+import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import org.springframework.data.redis.core.*;
@@ -233,6 +234,34 @@ public class RedisService {
             return false;
         }
 
+    }
+
+    public boolean isWithin10Minutes(List<ChatroomUsers> chatroomUsers) {
+        long earliestTimeValue = Long.MAX_VALUE;
+
+        for (ChatroomUsers user : chatroomUsers) {
+            long roomId = user.getChatroom().getChatroomId();
+            long userId = user.getUserId();
+            String timeKey = userId + "_" + roomId + RedisConstants.TIME;
+            String timeValueStr = getValues(timeKey);
+
+            if (timeValueStr != null && !timeValueStr.isEmpty()) {
+                long timeValue = Long.parseLong(timeValueStr);
+                earliestTimeValue = Math.min(earliestTimeValue, timeValue);
+            }
+        }
+
+        try {
+            long storedTimeSeconds = earliestTimeValue / 1000; // room 생성된 시간
+            long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
+            long timeDifference = currentTime - storedTimeSeconds;
+            long tenMinutesInSeconds = 60 * 1;
+            log.info("timeDifference >= tenMinutesInSeconds :: {}", timeDifference >= tenMinutesInSeconds);
+
+            return timeDifference >= tenMinutesInSeconds;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
 }

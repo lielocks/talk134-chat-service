@@ -2,9 +2,11 @@ package kr.co.talk.domain.chatroomusers.entity;
 
 import lombok.*;
 
-import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.persistence.*;
 
 @Entity
 @Getter
@@ -23,4 +25,13 @@ public class Question {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "keyword_id")
     private Keyword keyword;
+    
+    private String guide;
+    
+    public List<String> getGuideList() {
+        return Stream.of(guide.split("\n"))
+                .map(s -> s.replaceAll("- ", ""))
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
 }

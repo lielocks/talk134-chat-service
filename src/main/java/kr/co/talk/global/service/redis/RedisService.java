@@ -1,26 +1,26 @@
 package kr.co.talk.global.service.redis;
 
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
+import kr.co.talk.domain.questionnotice.dto.QuestionNoticeManagementRedisDto;
+import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
-import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
-import kr.co.talk.global.constants.RedisConstants;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import javax.annotation.PostConstruct;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -95,8 +95,8 @@ public class RedisService {
         }).collect(Collectors.toList());
 
     }
-    
-    
+
+
     public void pushMap(String key, String fieldKey, Object value) {
         try {
             String writeValueAsString = objectMapper.writeValueAsString(value);
@@ -106,7 +106,7 @@ public class RedisService {
             throw new RuntimeException(e);
         }
     }
-    
+
     public Map<String, Object> getEntry(String key, Class<?> clazz) {
         Map<String, String> entries = opsForMap.entries(key);
         return entries.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(),
@@ -260,6 +260,30 @@ public class RedisService {
             return timeDifference >= tenMinutesInSeconds;
         } catch (NumberFormatException e) {
             return false;
+        }
+    }
+
+
+    // 질문 알림 조회용
+    public void saveObject(String key, Object value) {
+        try {
+            String item = objectMapper.writeValueAsString(value);
+            valueOps.set(key, item);
+        } catch (JsonProcessingException e) {
+            log.error("json parse exception , key is :: {}, value is :: {}", key, value, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public QuestionNoticeManagementRedisDto getCurrentQuestionNoticeDto(String key) {
+        String value = valueOps.get(key);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(value, QuestionNoticeManagementRedisDto.class);
+        } catch (JsonProcessingException e) {
+            return null;
         }
     }
 

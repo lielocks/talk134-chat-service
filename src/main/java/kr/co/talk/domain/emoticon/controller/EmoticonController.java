@@ -1,7 +1,7 @@
-package kr.co.talk.domain.chatroom.controller;
+package kr.co.talk.domain.emoticon.controller;
 
-import kr.co.talk.domain.chatroom.dto.PubEmoticonPayload;
-import kr.co.talk.domain.chatroom.service.EmoticonService;
+import kr.co.talk.domain.emoticon.dto.PubEmoticonPayload;
+import kr.co.talk.domain.emoticon.service.EmoticonService;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.ErrorDto;
 import lombok.RequiredArgsConstructor;

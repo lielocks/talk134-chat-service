@@ -1,8 +1,10 @@
 package kr.co.talk.domain.chatroomusers.service;
 
 import kr.co.talk.domain.chatroomusers.dto.*;
+import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.entity.Keyword;
 import kr.co.talk.domain.chatroomusers.entity.Question;
+import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.domain.chatroomusers.repository.KeywordRepository;
 import kr.co.talk.domain.chatroomusers.repository.QuestionRepository;
 import kr.co.talk.global.client.UserClient;
@@ -23,38 +25,15 @@ public class KeywordService {
 
     private final KeywordRepository keywordRepository;
     private final QuestionRepository questionRepository;
+    private final ChatroomUsersRepository usersRepository;
     private final RedisService redisService;
     private final UserClient userClient;
 
     public List<TopicListDto> sendTopicList(long userId, KeywordSendDto keywordSendDto) {
         List<Long> keywordCode = keywordSendDto.getKeywordCode();
         List<TopicListDto> responseDto = new ArrayList<>();
-
-        for (Long code : keywordCode) {
-            Keyword keyword = keywordRepository.findByKeywordId(code);
-            if (keyword == null) {
-                throw new CustomException(CustomError.KEYWORD_DOES_NOT_EXIST);
-            }
-
-            List<Question> questions = questionRepository.findByKeyword_KeywordId(code);
-            if (questions == null) {
-                throw new CustomException(CustomError.KEYWORD_DOES_NOT_MATCH);
-            }
-
-            List<Question> filteredQuestions = questions.stream()
-                    .filter(question -> question.getStatusMap() == 0)
-                    .collect(Collectors.toList());
-
-            List<Question> byQuestion = questionRepository.findByKeyword_KeywordIdAndAndStatusMap(code, setUserStatusMap(userId));
-            List<Question> addedQuestions = new ArrayList<>(byQuestion);
-            if (byQuestion.isEmpty() || !filteredQuestions.isEmpty()) {
-                addedQuestions.addAll(filteredQuestions);
-            }
-
-            Question question = getRandomQuestion(addedQuestions);
-            TopicListDto topicListDto = createTopicListDto(keyword, question);
-            responseDto.add(topicListDto);
-        }
+        boolean within24Hours = redisService.isWithin24Hours(keywordSendDto.getRoomId(), userId);
+        setUserQuestionList(userId, keywordCode, responseDto, within24Hours);
 
         List<Long> questionCode = responseDto.stream()
                 .map(TopicListDto::getQuestionId)
@@ -69,8 +48,54 @@ public class KeywordService {
         return responseDto;
     }
 
-    public void setQuestionOrder(long userId, QuestionCodeDto listDto) {
-        redisService.setQuestionCode(userId, listDto.getRoomId(), listDto);
+    private void setUserQuestionList (long userId, List<Long> keywordCode, List<TopicListDto> responseDto, boolean existingRoom) {
+
+        for (Long code : keywordCode) {
+            Keyword keyword = keywordRepository.findByKeywordId(code);
+            if (keyword == null) {
+                throw new CustomException(CustomError.KEYWORD_DOES_NOT_EXIST);
+            }
+
+            List<Question> firstQuestionList = questionRepository.findByKeyword_KeywordId(code);
+            if (firstQuestionList == null) {
+                throw new CustomException(CustomError.KEYWORD_DOES_NOT_MATCH);
+            }
+
+            if (existingRoom) {
+                Question randomQuestion = getRandomQuestion(firstQuestionList);
+                TopicListDto topics = createTopicListDto(keyword, randomQuestion);
+                responseDto.add(topics);
+            } else {
+                List<Question> filteredQuestions = firstQuestionList.stream()
+                        .filter(question -> question.getStatusMap() == 0)
+                        .collect(Collectors.toList());
+
+                List<Question> byQuestion = questionRepository.findByKeyword_KeywordIdAndAndStatusMap(code, setUserStatusMap(userId));
+                List<Question> addedQuestions = new ArrayList<>(byQuestion);
+                if (byQuestion.isEmpty() || !filteredQuestions.isEmpty()) {
+                    addedQuestions.addAll(filteredQuestions);
+                }
+
+                Question question = getRandomQuestion(addedQuestions);
+                TopicListDto topicListDto = createTopicListDto(keyword, question);
+
+                responseDto.add(topicListDto);
+            }
+        }
+
+    }
+
+    public AllRegisteredDto setQuestionOrder(long userId, QuestionCodeDto listDto) {
+        boolean registered;
+        List<Long> questionCode = redisService.findQuestionCode(listDto.getRoomId(), userId);
+
+        if (!questionCode.containsAll(listDto.getQuestionCodeList())) {
+            throw new CustomException(CustomError.QUESTION_ID_NOT_MATCHED);
+        }
+        Long countValue = redisService.setQuestionCode(userId, listDto.getRoomId(), listDto);
+        List<ChatroomUsers> users = usersRepository.findChatroomUsersByChatroom_ChatroomId(listDto.getRoomId());
+        registered = users.size() == countValue;
+        return AllRegisteredDto.builder().allRegistered(registered).build();
     }
 
     public Integer setUserStatusMap(long userId) {

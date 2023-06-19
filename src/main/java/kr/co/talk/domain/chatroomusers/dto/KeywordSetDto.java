@@ -11,8 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KeywordSetDto {
-    private Long userId;
     private Long roomId;
+    private int registeredQuestionOrder;
     private List<Long> questionCode;
     private List<Long> keywordCode;
 }

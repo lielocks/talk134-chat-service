@@ -10,6 +10,8 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.talk.global.constants.KafkaConstants;
+import kr.co.talk.global.exception.CustomError;
+import kr.co.talk.global.exception.CustomException;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,15 +26,21 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatRoomSender {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-//    private final ChatRedisService chatRedisService;
+    // private final ChatRedisService chatRedisService;
 
-    public void sendEndChatting(long roomId) throws JsonProcessingException {
+    public void sendEndChatting(long roomId, long userId) {
         KafkaEndChatroomDTO chatroomDTO = KafkaEndChatroomDTO.builder()
                 .roomId(roomId)
+                .userId(userId)
                 .localDateTime(LocalDateTime.now())
                 .build();
 
-        String jsonInString = objectMapper.writeValueAsString(chatroomDTO);
+        String jsonInString = "";
+        try {
+            jsonInString = objectMapper.writeValueAsString(chatroomDTO);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         ListenableFuture<SendResult<String, String>> future =
                 kafkaTemplate.send(KafkaConstants.TOPIC_END_CHATTING,
@@ -49,66 +57,12 @@ public class ChatRoomSender {
 
             @Override
             public void onFailure(Throwable ex) {
-                // TODO 실패 처리
-                log.info("unable to send message roomId=[{}] due to : {}", roomId, ex.getMessage());
+                log.error("unable to send message roomId=[{}] due to : {}", roomId,
+                        ex.getMessage());
+                throw new CustomException(CustomError.END_CHATROOM_SAVE_ERROR);
             }
         });
     }
-
-    public void test_send() {
-        ListenableFuture<SendResult<String, String>> future =
-                kafkaTemplate.send("test_topic", "test1");
-//        ListenableFuture<SendResult<String, String>> future =
-//                kafkaTemplate.send("test_topic", "key1", "test1"); // partition 지정
-        future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-
-            @Override
-            public void onSuccess(SendResult<String, String> result) {
-                RecordMetadata recordMetadata = result.getRecordMetadata();
-                log.info("recordMetadata :: " + recordMetadata);
-                log.info("partition:::" + recordMetadata.partition());
-                log.info("offset:::" + recordMetadata.offset());
-            }
-
-            @Override
-            public void onFailure(Throwable ex) {
-                // TODO Auto-generated method stub
-
-            }
-
-        });
-    }
-
-    // Kafka Producer
-//    public List<ChatDto> sendMessageToKafka(ChatroomSendDto sendDto) throws JsonProcessingException {
-//
-//        ObjectMapper objectMapper = new ObjectMapper()
-//                .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-//
-//        String jsonInString = objectMapper.writeValueAsString(sendDto);
-//
-//        ListenableFuture<SendResult<String, String>> future =
-//                kafkaTemplate.send(KafkaConstants.TOPIC_CHAT, jsonInString);
-//
-//        future.addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
-//
-//            @Override
-//            public void onSuccess(SendResult<String, String> result) {
-//                RecordMetadata recordMetadata = result.getRecordMetadata();
-//                log.info("sent topic=[{}] roodId [{}] with offset=[{}]", recordMetadata.topic(),
-//                        sendDto.getRoomId(),
-//                        recordMetadata.offset());
-//            }
-//
-//            @Override
-//            public void onFailure(Throwable ex) {
-//                // TODO 실패 처리
-//                log.info("unable to send message roomId=[{}] due to : {}", sendDto.getRoomId(), ex.getMessage());
-//            }
-//        });
-//
-//        return chatRedisService.sendChatroomDto(sendDto.getRoomId(), ChatDto.builder().name("name").nickname("nickname").activeFlag(true).build());
-//    }
 
 
     @Builder
@@ -117,7 +71,7 @@ public class ChatRoomSender {
     @AllArgsConstructor(access = AccessLevel.PROTECTED)
     private static class KafkaEndChatroomDTO {
         private long roomId;
+        private long userId;
         private LocalDateTime localDateTime;
-        // TODO 메시지 보낼게 더 있을지...
     }
 }

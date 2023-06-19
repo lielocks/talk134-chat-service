@@ -97,8 +97,8 @@ public class RedisServiceTest {
 
 		// when
 		redisService.pushQuestionList(roomId, userId, keywordSetDto);
-		List<String> list = redisService.getList(key);
-		KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
+		String list = redisService.getValues(key);
+		KeywordSetDto keywordDtoValue = objectMapper.readValue(list, KeywordSetDto.class);
 
 		// then
 		assertEquals(keywordDtoValue.getQuestionCode().get(0), 5L);

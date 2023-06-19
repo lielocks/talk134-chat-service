@@ -17,6 +17,7 @@ import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +33,7 @@ public class QuestionNoticeService {
     private final QuestionRepository questionRepository;
     private final KeywordService keywordService;
 
+    @Transactional(readOnly = true)
     public QuestionNoticeResponseDto getQuestionNotice(long roomId) {
         // redis에서 현재 진행상황 있는지 조회
         QuestionNoticeManagementRedisDto dto = redisService.getCurrentQuestionNoticeDto(getQuestionKey(roomId));

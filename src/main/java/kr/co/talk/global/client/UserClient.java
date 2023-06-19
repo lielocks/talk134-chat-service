@@ -68,4 +68,7 @@ public interface UserClient {
     @GetMapping(value = "/user/img-code")
     String getUserImgCode(@RequestHeader("userId") long userId);
 
+    
+    @GetMapping("/user/findTeamCode/{userId}")
+    public TeamCodeResponseDto findTeamCode(@PathVariable("userId") long userId);
 }

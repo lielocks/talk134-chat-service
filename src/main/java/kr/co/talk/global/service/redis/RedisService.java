@@ -8,6 +8,7 @@ import javax.annotation.PostConstruct;
 
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
+import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import org.springframework.data.redis.core.*;
@@ -127,10 +128,10 @@ public class RedisService {
         try {
             String writeValueAsString = objectMapper.writeValueAsString(keywordSetDto);
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
-            List<String> list = getList(key);
+            String value = getValues(key);
 
-            if (list == null || list.isEmpty()) {
-                opsForList.leftPush(key, writeValueAsString);
+            if (value == null || value.isEmpty()) {
+                valueOps.set(key, writeValueAsString);
             } else {
                 throw new CustomException(CustomError.QUESTION_ALREADY_REGISTERED);
             }
@@ -144,8 +145,8 @@ public class RedisService {
     public Long setQuestionCode(long userId, long roomId, QuestionCodeDto listDto) {
         try {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
-            List<String> valueList = getList(key);
-            KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList.get(0), KeywordSetDto.class);
+            String valueList = getValues(key);
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList, KeywordSetDto.class);
 
             List<Long> firstCode = keywordDtoValue.getQuestionCode();
             if (listDto.getQuestionCodeList().size() != firstCode.size()) {
@@ -155,8 +156,7 @@ public class RedisService {
                 firstCode.set(i, listDto.getQuestionCodeList().get(i));
             }
             keywordDtoValue.setRegisteredQuestionOrder(keywordDtoValue.getRegisteredQuestionOrder() + 1);
-            valueList.set(0, objectMapper.writeValueAsString(keywordDtoValue));
-            redisTemplate.opsForList().set(key, 0, valueList.get(0));
+            valueOps.set(key, objectMapper.writeValueAsString(keywordDtoValue));
 
             if (keywordDtoValue.getRegisteredQuestionOrder() > 1) {
                 throw new CustomException(CustomError.QUESTION_ORDER_CHANCE_ONCE);
@@ -172,8 +172,8 @@ public class RedisService {
     public List<Long> findQuestionCode(long roomId, long userId) {
         try {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
-            List<String> list = getList(key);
-            KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
+            String values = getValues(key);
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(values, KeywordSetDto.class);
             List<Long> questionCode = keywordDtoValue.getQuestionCode();
             return questionCode;
         } catch (JsonProcessingException e) {
@@ -184,8 +184,8 @@ public class RedisService {
     public List<Long> findKeywordCode(long roomId, long userId) {
         try {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
-            List<String> list = getList(key);
-            KeywordSetDto keywordDtoValue = objectMapper.readValue(list.get(0), KeywordSetDto.class);
+            String values = getValues(key);
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(values, KeywordSetDto.class);
             List<Long> keywordCode = keywordDtoValue.getKeywordCode();
             return keywordCode;
         } catch (JsonProcessingException e) {
@@ -196,15 +196,71 @@ public class RedisService {
     /**
      * TODO //expire timeOut -> 대화 마감 알림 소켓에서 status 퇴장으로 set한 시간 - 대화방 입장한 시간
      */
-    public void pushUserChatRoom(String userId, String roomId) throws CustomException {
+    public void pushUserChatRoom(long userId, long roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;
-        valueOps.setIfAbsent(key, roomId, Duration.ofMinutes(10));
-        redisTemplate.exec(); // redis transaction commit
+        valueOps.setIfAbsent(key, String.valueOf(roomId), Duration.ofMinutes(10));
     }
+
 
     public Long incrementCount(long roomId) {
         String countKey = roomId + RedisConstants.COUNT;
         return integerValueOps.increment(countKey);
+    }
+
+    public void roomCreateTime (long roomId, long userId) {
+        String timeKey = userId + "_" + roomId + RedisConstants.TIME;
+        valueOps.setIfAbsent(timeKey, String.valueOf(System.currentTimeMillis()), Duration.ofDays(1));
+        redisTemplate.multi(); // chat service 에서 pushUserChatRoom 후 multi 로 transaction 열어줌
+        redisTemplate.exec();
+    }
+
+    public boolean isWithin24Hours(long roomId, long userId) {
+        String timeKey = userId + "_" + roomId + RedisConstants.TIME;
+        String timeValueStr = getValues(timeKey);
+        if (timeValueStr == null || timeValueStr.isEmpty()) {
+            return false;
+        }
+
+        try {
+            long timeValue = Long.parseLong(timeValueStr);
+            long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
+            long storedTimeSeconds = timeValue / 1000; // room 생성된 시간
+            long timeDifference = currentTime - storedTimeSeconds;
+            long twentyFourHoursInSeconds = 24 * 60 * 60;
+
+            return timeDifference <= twentyFourHoursInSeconds;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+    }
+
+    public boolean isWithin10Minutes(List<ChatroomUsers> chatroomUsers) {
+        long earliestTimeValue = Long.MAX_VALUE;
+
+        for (ChatroomUsers user : chatroomUsers) {
+            long roomId = user.getChatroom().getChatroomId();
+            long userId = user.getUserId();
+            String timeKey = userId + "_" + roomId + RedisConstants.TIME;
+            String timeValueStr = getValues(timeKey);
+
+            if (timeValueStr != null && !timeValueStr.isEmpty()) {
+                long timeValue = Long.parseLong(timeValueStr);
+                earliestTimeValue = Math.min(earliestTimeValue, timeValue);
+            }
+        }
+
+        try {
+            long storedTimeSeconds = earliestTimeValue / 1000; // room 생성된 시간
+            long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
+            long timeDifference = currentTime - storedTimeSeconds;
+            long tenMinutesInSeconds = 60 * 10;
+            log.info("timeDifference >= tenMinutesInSeconds :: {}", timeDifference >= tenMinutesInSeconds);
+
+            return timeDifference >= tenMinutesInSeconds;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
 }

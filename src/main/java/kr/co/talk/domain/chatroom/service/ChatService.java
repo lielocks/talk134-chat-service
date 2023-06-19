@@ -31,12 +31,12 @@ public class ChatService {
     private final RedisService redisService;
 
     @Transactional
-    public List<ChatEnterResponseDto> sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
+    public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
-        return getResponseDto(chatEnterDto);
+        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).chatroomUserInfos(getResponseDto(chatEnterDto)).build();
     }
 
-    private List<ChatEnterResponseDto> getResponseDto(ChatEnterDto chatEnterDto) {
+    private List<ChatEnterResponseDto.ChatroomUserInfo> getResponseDto(ChatEnterDto chatEnterDto) {
         boolean flag = chatEnterDto.isSelected();
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         if (chatroom == null) {
@@ -67,7 +67,7 @@ public class ChatService {
         });
 
         int finalFlag = socketFlagStatus(chatEnterDto.getSocketFlag(), chatEnterDto);
-        List<ChatEnterResponseDto> chatUserInfos = new ArrayList<>();
+        List<ChatEnterResponseDto.ChatroomUserInfo> chatUserInfos = new ArrayList<>();
         for (Long userId : idList) {
 
             RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.stream()
@@ -77,7 +77,7 @@ public class ChatService {
 
             ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), userId);
 
-            ChatEnterResponseDto responseUserInfo = new ChatEnterResponseDto(
+            ChatEnterResponseDto.ChatroomUserInfo responseUserInfo = new ChatEnterResponseDto.ChatroomUserInfo(
                     enterDto.getUserId(),
                     enterDto.getNickname(),
                     enterDto.getUserName(),
@@ -97,7 +97,8 @@ public class ChatService {
         if (chatroomUsersByUserId == null) {
             throw new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST);
         }
-        redisService.pushUserChatRoom(String.valueOf(chatEnterDto.getUserId()), String.valueOf(chatEnterDto.getRoomId()));
+        redisService.pushUserChatRoom(chatEnterDto.getUserId(), chatEnterDto.getRoomId());
+        redisService.roomCreateTime(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
         String redisValue = redisService.getValues(key);
         log.info("redis Value :: {}", redisValue);
         boolean b = redisValue.equals(String.valueOf(chatEnterDto.getRoomId()));
@@ -107,12 +108,17 @@ public class ChatService {
         }
     }
 
+    /**
+     *  1. 채팅방이 만들어진 후 10분 지난 시점에서 socketFlag가 1로 바뀌지 않았을때
+     *  2. activeFlag가 true인 사람들이 과반수 이상일때
+     *  3. activeFlag가 false인 사람들 모두 true로 바꿔줌 -> 자동으로 socketFlag 1로 변경됨
+     */
     public int socketFlagStatus(int socketFlag, ChatEnterDto chatEnterDto) {
         int flag = 0;
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
 
-        //화면 전환으로 enterDto 가 초기값으로 설정되었을때
+        // 화면 전환으로 enterDto 가 초기값으로 설정되었을때
         Integer currentSocketFlag = getChatroomUsers(chatroom).stream().map(user -> user.getSocketFlag()).findFirst().get();
         if (socketFlag < currentSocketFlag) {
             if (chatEnterDto.isSelected()) {
@@ -159,8 +165,43 @@ public class ChatService {
         }
     }
 
+    @Transactional
+    public void disconnectUserSetFalse(long userId, long roomId) {
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(roomId, userId);
+        user.activeFlagOn(false);
+    }
+
+    public boolean userStatus(long userId, long roomId) {
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(roomId, userId);
+        return user.isActiveFlag();
+    }
+
     private boolean allChatroomUsersActive(List<ChatroomUsers> chatroomUsers) {
         return chatroomUsers.stream().allMatch(ChatroomUsers::isActiveFlag);
+    }
+
+    private boolean checkTrueStatusGoe(Chatroom chatroom) {
+        List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
+        List<ChatroomUsers> flagTrueUsersList = chatroomUsers.stream().filter(ChatroomUsers::isActiveFlag).collect(Collectors.toList());
+        return flagTrueUsersList.size() >= Math.ceil(chatroomUsers.size() / 2.0);
+    }
+
+    // 대화 참여자가 1/2 이상 참여하기 버튼을 누른 상태 -> 10분 이상이 지나면 set activeFlag true
+    private String after10Minutes(ChatEnterDto chatEnterDto) {
+        String verify;
+        Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
+        List<ChatroomUsers> currentUsers = usersRepository.findChatroomUsersByChatroom(chatroom);
+        boolean statusGoe = checkTrueStatusGoe(chatroom);
+
+        if (statusGoe && redisService.isWithin10Minutes(currentUsers)) {
+            setAllChatroomUsersActiveFlag(currentUsers, true);
+            verify = "true";
+        } else if (!statusGoe && redisService.isWithin10Minutes(currentUsers)) {
+            verify = "stillFalse";
+        } else {
+            verify = "false";
+        }
+        return verify;
     }
 
 }

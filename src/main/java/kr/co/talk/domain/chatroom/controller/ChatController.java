@@ -8,12 +8,14 @@ import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.exception.ErrorDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @RestController
 @Slf4j
@@ -24,12 +26,15 @@ public class ChatController {
     private final SimpMessagingTemplate template;
 
     @MessageMapping("/enter")
-    public void message(@Payload ChatEnterDto chatEnterDto) {
+    public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
         try {
-            List<ChatEnterResponseDto> responseDto = chatService.sendChatMessage(chatEnterDto);
-            log.info("full ResponseDto :: {} ", responseDto);
+            ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
             template.convertAndSend(getRoomDestination(chatEnterDto.getRoomId()), responseDto);
-        } catch (CustomException e) {
+            headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
+            headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
+            log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
+        }
+        catch (CustomException e) {
             if (e.getCustomError() == CustomError.CHATROOM_DOES_NOT_EXIST) {
                 chatroomNotExist(chatEnterDto.getRoomId());
             } else if (e.getCustomError() == CustomError.USER_DOES_NOT_EXIST) {
@@ -39,6 +44,20 @@ public class ChatController {
             }
         }
     }
+
+    @EventListener
+    public void webSocketDisconnectListener(SessionDisconnectEvent event) {
+        log.info("disconnected event :: {}", event);
+        // 어떤 userId, roomId 정보를 가진 session 이 끊겼는지 get message
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+
+        long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
+        long roomId = (Long) headerAccessor.getSessionAttributes().get("roomId");
+
+        chatService.disconnectUserSetFalse(userId, roomId);
+        log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
+    }
+
 
     private String getRoomDestination(Long roomId) {
         return String.format("%s/%s", CHAT_ROOM_ENTER_DESTINATION, roomId);

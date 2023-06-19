@@ -245,10 +245,13 @@ public class RedisService {
 
     public QuestionNoticeManagementRedisDto getCurrentQuestionNoticeDto(String key) {
         String value = valueOps.get(key);
+        if (value == null) {
+            return null;
+        }
         try {
             return objectMapper.readValue(value, QuestionNoticeManagementRedisDto.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 

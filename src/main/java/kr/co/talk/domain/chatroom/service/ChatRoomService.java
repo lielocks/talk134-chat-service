@@ -205,9 +205,8 @@ public class ChatRoomService {
 				.build();
 
 		userClient.changeStatus(userId, updateRequestStatusDto);
-		TeamCodeResponseDto teamCodeDto = userClient.findTeamCode(userId);
 		
 		// kafka를 통해 채팅방 종료 이벤트 메세지 보냄
-		chatRoomSender.sendEndChatting(feedback.getRoomId(), userId, teamCodeDto.getTeamCode());
+		chatRoomSender.sendEndChatting(feedback.getRoomId(), userId);
 	}
 }

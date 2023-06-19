@@ -28,11 +28,10 @@ public class ChatRoomSender {
     private final ObjectMapper objectMapper;
     // private final ChatRedisService chatRedisService;
 
-    public void sendEndChatting(long roomId, long userId, String teamCode) {
+    public void sendEndChatting(long roomId, long userId) {
         KafkaEndChatroomDTO chatroomDTO = KafkaEndChatroomDTO.builder()
                 .roomId(roomId)
                 .userId(userId)
-                .teamCode(teamCode)
                 .localDateTime(LocalDateTime.now())
                 .build();
 
@@ -77,7 +76,6 @@ public class ChatRoomSender {
     private static class KafkaEndChatroomDTO {
         private long roomId;
         private long userId;
-        private String teamCode;
         private LocalDateTime localDateTime;
     }
 }

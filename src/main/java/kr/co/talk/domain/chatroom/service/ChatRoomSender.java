@@ -28,10 +28,11 @@ public class ChatRoomSender {
     private final ObjectMapper objectMapper;
     // private final ChatRedisService chatRedisService;
 
-    public void sendEndChatting(long roomId, long userId) {
+    public void sendEndChatting(long roomId, long userId, String teamCode) {
         KafkaEndChatroomDTO chatroomDTO = KafkaEndChatroomDTO.builder()
                 .roomId(roomId)
                 .userId(userId)
+                .teamCode(teamCode)
                 .localDateTime(LocalDateTime.now())
                 .build();
 
@@ -42,6 +43,10 @@ public class ChatRoomSender {
             e.printStackTrace();
         }
 
+        
+        log.info("roomId :: {} end message send ~ ", roomId);
+       
+        
         ListenableFuture<SendResult<String, String>> future =
                 kafkaTemplate.send(KafkaConstants.TOPIC_END_CHATTING,
                         jsonInString);
@@ -72,6 +77,7 @@ public class ChatRoomSender {
     private static class KafkaEndChatroomDTO {
         private long roomId;
         private long userId;
+        private String teamCode;
         private LocalDateTime localDateTime;
     }
 }

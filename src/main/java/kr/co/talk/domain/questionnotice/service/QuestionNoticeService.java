@@ -56,22 +56,22 @@ public class QuestionNoticeService {
         }
         if (dto.isFinalQuestion()) {
             if (dto.isFinalSpeaker()) {
-                throw new CustomException();
+                throw new CustomException(CustomError.ALREADY_FINISHED);
             }
             dto.resetQuestionIndex();
             dto.incrementCurrentSpeakerIndex();
         } else {
             dto.incrementCurrentQuestionIndex();
         }
-        
+
         // redis에 진행상황 dto 저장
         saveCurrentQuestionStatus(roomId, dto);
         var speaker = dto.getSpeakerQueue().get(dto.getCurrentSpeakerIndex());
 
         List<Long> questionCodes = redisService.findQuestionCode(roomId, speaker.getUserId());
         Question currentQuestion = questionRepository.findById(questionCodes.get(dto.getCurrentQuestionIndex()))
-                .orElseThrow(() -> new CustomException());
-        
+                .orElseThrow(CustomException::new);
+
         return QuestionNoticeResponseDto.builder()
                 .speaker(speaker)
                 .userList(dto.getSpeakerQueue())

@@ -2,6 +2,8 @@ package kr.co.talk.global.exception;
 
 import org.springframework.http.HttpStatus;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
 public enum CustomError {
     // 채팅방
     USER_NUMBER_ERROR(2000, "대화방 참가자는 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST.value()),
@@ -17,6 +19,9 @@ public enum CustomError {
     QUESTION_LIST_SIZE_MISMATCH(4003, "해당 리스트의 질문 갯수가 3이 아닙니다.", HttpStatus.BAD_REQUEST.value()),
     CHATROOM_USER_ALREADY_JOINED(4004, "이미 참가하신 채팅방이 존재합니다.", HttpStatus.BAD_REQUEST.value()),
     QUESTION_ALREADY_REGISTERED(4005, "이미 질문을 등록하였습니다.", HttpStatus.BAD_REQUEST.value()),
+
+    // 질문 알림 조회시
+    ALREADY_FINISHED(5000, "이미 종료된 대화방입니다.", BAD_REQUEST),
 
     // 공통
     SERVER_ERROR(3000, "알수 없는 문제가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR.value()),
@@ -43,5 +48,11 @@ public enum CustomError {
         this.errorCode = errorCode;
         this.message = message;
         this.statusCode = statusCode;
+    }
+
+    CustomError(int errorCode, String message, HttpStatus status) {
+        this.errorCode = errorCode;
+        this.message = message;
+        this.statusCode = status.value();
     }
 }

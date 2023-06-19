@@ -53,21 +53,21 @@ public class QuestionNoticeService {
                     .currentQuestionIndex(0)
                     .speakerQueue(userList)
                     .build();
-        }
-        if (dto.isFinalQuestion()) {
-            if (dto.isFinalSpeaker()) {
-                throw new CustomException(CustomError.ALREADY_FINISHED);
-            }
-            dto.resetQuestionIndex();
-            dto.incrementCurrentSpeakerIndex();
         } else {
-            dto.incrementCurrentQuestionIndex();
+            if (dto.isFinalQuestion()) {
+                if (dto.isFinalSpeaker()) {
+                    throw new CustomException(CustomError.ALREADY_FINISHED);
+                }
+                dto.incrementCurrentSpeakerIndex();
+                dto.resetQuestionIndex();
+            } else {
+                dto.incrementCurrentQuestionIndex();
+            }
         }
 
-        // redis에 진행상황 dto 저장
         saveCurrentQuestionStatus(roomId, dto);
-        var speaker = dto.getSpeakerQueue().get(dto.getCurrentSpeakerIndex());
 
+        var speaker = dto.getSpeakerQueue().get(dto.getCurrentSpeakerIndex());
         List<Long> questionCodes = redisService.findQuestionCode(roomId, speaker.getUserId());
         Question currentQuestion = questionRepository.findById(questionCodes.get(dto.getCurrentQuestionIndex()))
                 .orElseThrow(CustomException::new);
@@ -82,6 +82,7 @@ public class QuestionNoticeService {
                         .depth(keywordService.convertIdIntoDepth(currentQuestion.getQuestionId()))
                         .questionGuide(currentQuestion.getGuideList())
                         .build())
+                .questionCount(dto.getCurrentQuestionIndex() + 1)
                 .endFlag(dto.isFinalSpeaker() && dto.isFinalQuestion())
                 .build();
     }

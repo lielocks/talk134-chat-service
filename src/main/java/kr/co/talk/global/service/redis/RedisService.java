@@ -6,9 +6,11 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import kr.co.talk.domain.chatroomusers.dto.CountRedisDto;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
+import kr.co.talk.domain.questionnotice.dto.QuestionNoticeManagementRedisDto;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import org.springframework.data.redis.core.*;
@@ -225,6 +227,27 @@ public class RedisService {
 
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    // 질문 알림 조회용
+    public void saveObject(String key, Object value) {
+        try {
+            String item = objectMapper.writeValueAsString(value);
+            valueOps.set(key, item);
+        } catch (JsonProcessingException e) {
+            log.error("json parse exception , key is :: {}, value is :: {}", key, value, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public QuestionNoticeManagementRedisDto getCurrentQuestionNoticeDto(String key) {
+        String value = valueOps.get(key);
+        try {
+            return objectMapper.readValue(value, QuestionNoticeManagementRedisDto.class);
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }

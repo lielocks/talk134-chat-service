@@ -21,6 +21,11 @@ public class QuestionNoticeManagementRedisDto {
     private int currentIndex;
 
     /**
+     * 현재 스피커의 질문 순서. 1,2,3
+     */
+    private int currentQuestion;
+
+    /**
      * 질문 스피커 순서 랜덤으로 배열한 것
      */
     private List<Long> speakerQueue;

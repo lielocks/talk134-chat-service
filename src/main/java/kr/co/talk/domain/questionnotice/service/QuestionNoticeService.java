@@ -12,6 +12,7 @@ import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.math.RandomUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -29,7 +30,7 @@ public class QuestionNoticeService {
 
     @Transactional(readOnly = true)
     public QuestionNoticeResponseDto getQuestionNotice(long roomId) {
-        List<String> list = test(roomId);
+        List<String> list = getQuestionList(roomId);
         if (CollectionUtils.isEmpty(list)) {
             
         }
@@ -43,7 +44,7 @@ public class QuestionNoticeService {
                 .collect(Collectors.toUnmodifiableList()));
         var randomUser = userList.get(RandomUtils.nextInt(userList.size()));
         // TODO: redis에서 값 읽어오고 순서처리
-//        List<Long> questionCodes = redisService.findQuestionCode(roomId, randomUser.getUserId());
+        List<Long> questionCodes = redisService.findQuestionCode(roomId, randomUser.getUserId());
         // TODO: topic 세팅
         return QuestionNoticeResponseDto.builder()
                 .speaker(randomUser)
@@ -51,11 +52,15 @@ public class QuestionNoticeService {
                 .build();
     }
 
-    private List<String> test(long roomId) {
-        return redisService.getList(getKey(roomId));
+    private List<String> getQuestionList(long roomId) {
+        return redisService.getList(getQuestionKey(roomId));
     }
 
-    private String getKey(long roomId) {
+    private String getQuestionKey(long roomId) {
         return String.format("%s_%s", roomId, RedisConstants.QUESTION_NOTICE);
+    }
+
+    private void saveCurrentQuestionStatus() {
+
     }
 }

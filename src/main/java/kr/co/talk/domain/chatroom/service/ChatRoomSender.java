@@ -42,6 +42,10 @@ public class ChatRoomSender {
             e.printStackTrace();
         }
 
+        
+        log.info("roomId :: {} end message send ~ ", roomId);
+       
+        
         ListenableFuture<SendResult<String, String>> future =
                 kafkaTemplate.send(KafkaConstants.TOPIC_END_CHATTING,
                         jsonInString);

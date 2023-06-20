@@ -1,11 +1,11 @@
-package kr.co.talk.domain.chatroom.service;
+package kr.co.talk.domain.emoticon.service;
 
-import kr.co.talk.domain.chatroom.dto.EmoticonResponseDto;
-import kr.co.talk.domain.chatroom.dto.PubEmoticonPayload;
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
+import kr.co.talk.domain.emoticon.dto.EmoticonResponseDto;
+import kr.co.talk.domain.emoticon.dto.PubEmoticonPayload;
 import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;

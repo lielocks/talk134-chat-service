@@ -2,7 +2,6 @@ package kr.co.talk.global.client;
 
 import java.util.List;
 
-import kr.co.talk.domain.chatroom.dto.RequestDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.ChatRoomEnterResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -68,4 +67,7 @@ public interface UserClient {
     @GetMapping(value = "/user/img-code")
     String getUserImgCode(@RequestHeader("userId") long userId);
 
+    
+    @GetMapping("/user/findTeamCode/{userId}")
+    public TeamCodeResponseDto findTeamCode(@PathVariable("userId") long userId);
 }

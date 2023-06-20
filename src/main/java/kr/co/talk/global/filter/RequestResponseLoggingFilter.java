@@ -1,6 +1,7 @@
 package kr.co.talk.global.filter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
@@ -70,6 +71,6 @@ public class RequestResponseLoggingFilter extends OncePerRequestFilter {
                 wrapper.copyBodyToResponse();
             }
         }
-        return payload == null ? "-" : payload.substring(0, Math.min(255, payload.length()));
+        return payload == null ? "-" : StringUtils.abbreviate(payload, 255);
     }
 }

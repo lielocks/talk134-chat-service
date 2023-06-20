@@ -30,6 +30,9 @@ public class EmoticonController {
         }
         try {
             template.convertAndSend(getRoomDestination(roomId), emoticonService.saveEmoticonHistoryToRedis(payload));
+            template.convertAndSend(
+                    getRoomUserDestination(roomId, payload.getToUserId()),
+                    emoticonService.getUserReceivedEmoticons(roomId, payload.getToUserId()));
         } catch (IllegalArgumentException e) {
             sendIllegalArgumentError(roomId);
         } catch (Exception e) {
@@ -37,8 +40,12 @@ public class EmoticonController {
         }
     }
 
-    private String getRoomDestination(Long roomId) {
+    private String getRoomDestination(long roomId) {
         return String.format("%s/%s", CHAT_ROOM_EMOTICON_DESTINATION, roomId);
+    }
+
+    private String getRoomUserDestination(long roomId, long userId) {
+        return String.format("%s/%s", getRoomDestination(roomId), userId);
     }
 
     private void sendRoomNotFoundError(Long roomId) {

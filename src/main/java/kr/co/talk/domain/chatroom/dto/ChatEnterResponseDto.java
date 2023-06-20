@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ChatEnterResponseDto {
      private String checkInFlag;
+     private Long requestId;
      private List<ChatroomUserInfo> chatroomUserInfos;
      @Data
      @NoArgsConstructor

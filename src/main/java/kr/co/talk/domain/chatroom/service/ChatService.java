@@ -33,7 +33,7 @@ public class ChatService {
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
-        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).chatroomUserInfos(getResponseDto(chatEnterDto)).build();
+        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).requestId(chatEnterDto.getUserId()).chatroomUserInfos(getResponseDto(chatEnterDto)).build();
     }
 
     private List<ChatEnterResponseDto.ChatroomUserInfo> getResponseDto(ChatEnterDto chatEnterDto) {
@@ -152,6 +152,12 @@ public class ChatService {
             user.setSocketFlag(flag);
         }
         return flag;
+    }
+
+    public Long setReloadId(ChatEnterDto chatEnterDto) {
+        if (usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId()).getSocketFlag() > chatEnterDto.getSocketFlag()) {
+            return chatEnterDto.getUserId();
+        } else return null;
     }
 
     private List<ChatroomUsers> getChatroomUsers(Chatroom chatroom) {

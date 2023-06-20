@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByKeyword_KeywordId(Long keywordId);
     List<Question> findByKeyword_KeywordIdAndAndStatusMap(Long keywordId, int statusNumber);
+    Question findByQuestionId(Long id);
 }

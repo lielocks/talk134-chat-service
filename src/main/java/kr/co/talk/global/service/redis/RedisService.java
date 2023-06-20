@@ -1,5 +1,20 @@
 package kr.co.talk.global.service.redis;
 
+import java.time.Duration;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+
+import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
+import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
+import kr.co.talk.domain.chatroomusers.dto.TopicListRedisDto;
+import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
+import kr.co.talk.global.exception.CustomError;
+import kr.co.talk.global.exception.CustomException;
+import org.springframework.data.redis.core.*;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
@@ -126,16 +141,35 @@ public class RedisService {
 
     public void pushQuestionList(long roomId, long userId, KeywordSetDto keywordSetDto) {
         try {
-            String writeValueAsString = objectMapper.writeValueAsString(keywordSetDto);
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
-            String value = getValues(key);
-
-            if (value == null || value.isEmpty()) {
+            if (getValues(key) == null || getValues(key).isEmpty()) {
+                int count = keywordSetDto.getRegisteredQuestionOrder();
+                count += 1;
+                keywordSetDto.setRegisteredQuestionOrder(count);
+                String writeValueAsString = objectMapper.writeValueAsString(keywordSetDto);
                 valueOps.set(key, writeValueAsString);
             } else {
+                String valueList = getValues(key);
+                KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList, KeywordSetDto.class);
+
+                int counted = keywordDtoValue.getRegisteredQuestionOrder();
+                counted += 1;
+                keywordDtoValue.setRegisteredQuestionOrder(counted);
+                String writeValueAsString = objectMapper.writeValueAsString(keywordDtoValue);
+
+                valueOps.set(key, writeValueAsString);
+            }
+            if (findRegisteredCount(roomId, userId) > 2) {
+                String valueList = getValues(key);
+                KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList, KeywordSetDto.class);
+
+                int counted = keywordDtoValue.getRegisteredQuestionOrder();
+                counted -= 1;
+                keywordDtoValue.setRegisteredQuestionOrder(counted);
+                String writeValueAsString = objectMapper.writeValueAsString(keywordDtoValue);
+                valueOps.set(key, writeValueAsString);
                 throw new CustomException(CustomError.QUESTION_ALREADY_REGISTERED);
             }
-
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
             throw new RuntimeException(e);
@@ -145,10 +179,13 @@ public class RedisService {
     public Long setQuestionCode(long userId, long roomId, QuestionCodeDto listDto) {
         try {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
+            String countKey = roomId + "_" + userId + RedisConstants.COUNT;
+            String roomCountKey = roomId + RedisConstants.COUNT;
             String valueList = getValues(key);
-            KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList, KeywordSetDto.class);
 
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList, KeywordSetDto.class);
             List<Long> firstCode = keywordDtoValue.getQuestionCode();
+
             if (listDto.getQuestionCodeList().size() != firstCode.size()) {
                 throw new CustomException(CustomError.QUESTION_LIST_SIZE_MISMATCH);
             }
@@ -156,12 +193,14 @@ public class RedisService {
                 firstCode.set(i, listDto.getQuestionCodeList().get(i));
             }
             keywordDtoValue.setRegisteredQuestionOrder(keywordDtoValue.getRegisteredQuestionOrder() + 1);
+
             valueOps.set(key, objectMapper.writeValueAsString(keywordDtoValue));
 
-            if (keywordDtoValue.getRegisteredQuestionOrder() > 1) {
-                throw new CustomException(CustomError.QUESTION_ORDER_CHANCE_ONCE);
+            if (Objects.equals(Boolean.FALSE, integerRedisTemplate.hasKey(countKey))) {
+                integerValueOps.increment(countKey);
+                return integerValueOps.increment(roomCountKey);
             } else {
-                return incrementCount(roomId);
+                throw new CustomException(CustomError.QUESTION_ORDER_CHANCE_ONCE);
             }
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
@@ -175,6 +214,7 @@ public class RedisService {
             String values = getValues(key);
             KeywordSetDto keywordDtoValue = objectMapper.readValue(values, KeywordSetDto.class);
             List<Long> questionCode = keywordDtoValue.getQuestionCode();
+
             return questionCode;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -186,8 +226,20 @@ public class RedisService {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
             String values = getValues(key);
             KeywordSetDto keywordDtoValue = objectMapper.readValue(values, KeywordSetDto.class);
+
             List<Long> keywordCode = keywordDtoValue.getKeywordCode();
             return keywordCode;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Integer findRegisteredCount (long roomId, long userId) {
+        try {
+            String key = roomId + "_" + userId + RedisConstants.QUESTION;
+            String values = getValues(key);
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(values, KeywordSetDto.class);
+            return keywordDtoValue.getRegisteredQuestionOrder();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -199,12 +251,6 @@ public class RedisService {
     public void pushUserChatRoom(long userId, long roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;
         valueOps.setIfAbsent(key, String.valueOf(roomId), Duration.ofMinutes(10));
-    }
-
-
-    public Long incrementCount(long roomId) {
-        String countKey = roomId + RedisConstants.COUNT;
-        return integerValueOps.increment(countKey);
     }
 
     public void roomCreateTime (long roomId, long userId) {
@@ -263,6 +309,16 @@ public class RedisService {
         }
     }
 
+    public TopicListRedisDto returnTopicList(long userId, long roomId) {
+        String values = getValues(roomId + "_" + userId + RedisConstants.QUESTION);
+        try {
+            KeywordSetDto keywordDtoValue = objectMapper.readValue(values, KeywordSetDto.class);
+            TopicListRedisDto listRedisDto = TopicListRedisDto.builder().questionList(keywordDtoValue.getQuestionCode()).keywordList(keywordDtoValue.getKeywordCode()).build();
+            return listRedisDto;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     // 질문 알림 조회용
     public void saveObject(String key, Object value) {

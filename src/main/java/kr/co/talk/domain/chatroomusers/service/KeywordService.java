@@ -1,5 +1,8 @@
 package kr.co.talk.domain.chatroomusers.service;
 
+import kr.co.talk.domain.chatroom.dto.SocketFlagResponseDto;
+import kr.co.talk.domain.chatroom.model.Chatroom;
+import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.dto.*;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.entity.Keyword;
@@ -14,6 +17,7 @@ import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,7 +33,7 @@ public class KeywordService {
     private final RedisService redisService;
     private final UserClient userClient;
 
-    public List<TopicListDto> sendTopicList(long userId, KeywordSendDto keywordSendDto) {
+    public SocketFlagResponseDto setQuestionWithFlag (long userId, KeywordSendDto keywordSendDto) {
         List<Long> keywordCode = keywordSendDto.getKeywordCode();
         List<TopicListDto> responseDto = new ArrayList<>();
         boolean within24Hours = redisService.isWithin24Hours(keywordSendDto.getRoomId(), userId);
@@ -44,7 +48,26 @@ public class KeywordService {
                 .keywordCode(keywordCode)
                 .questionCode(questionCode)
                 .build();
+
         redisService.pushQuestionList(keywordSendDto.getRoomId(), userId, keywordSetDto);
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(keywordSendDto.getRoomId(), userId);
+        user.setSocketFlag(4);
+
+        usersRepository.save(user);
+        return SocketFlagResponseDto.builder().socketFlag(4).build();
+    }
+
+    public List<TopicListDto> sendTopicList(TopicListRedisDto listDto) {
+        List<Long> keywordCode = listDto.getKeywordList();
+        List<Long> questionCode = listDto.getQuestionList();
+        List<TopicListDto> responseDto = new ArrayList<>();
+
+        for (int i = 0; i < keywordCode.size(); i++ ) {
+            TopicListDto dto = TopicListDto.builder().keywordId(keywordCode.get(i)).keywordName(keywordRepository.findByKeywordId(keywordCode.get(i)).getName())
+                    .questionId(questionCode.get(i)).questionName(questionRepository.findByQuestionId(questionCode.get(i)).getContent()).depth(convertIdIntoDepth(questionCode.get(i))).build();
+            responseDto.add(dto);
+        }
+
         return responseDto;
     }
 
@@ -95,6 +118,16 @@ public class KeywordService {
         Long countValue = redisService.setQuestionCode(userId, listDto.getRoomId(), listDto);
         List<ChatroomUsers> users = usersRepository.findChatroomUsersByChatroom_ChatroomId(listDto.getRoomId());
         registered = users.size() == countValue;
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(listDto.getRoomId(), userId);
+        user.setSocketFlag(5);
+        usersRepository.save(user);
+        boolean allMatch = users.stream().allMatch(chatroomUsers -> chatroomUsers.getSocketFlag() == 5);
+        if (allMatch) {
+            for (ChatroomUsers setUser : users) {
+                setUser.setSocketFlag(6);
+            }
+            usersRepository.saveAll(users);
+        }
         return AllRegisteredDto.builder().allRegistered(registered).build();
     }
 

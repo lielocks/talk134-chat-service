@@ -1,25 +1,37 @@
 package kr.co.talk.global.constants;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class StompConstants {
-    private static final String CHAT_ROOM_EMOTICON_DESTINATION = "/sub/chat/room/emoticon";
-    private static final String CHAT_ROOM_ENTER_DESTINATION = "/sub/chat/room";
-    private static final String CHAT_ROOM_PRIVATE_DESTINATION = "/sub/private/channel";
+    private static final String CHAT_ROOM_EMOTICON_DESTINATION = "/sub/chat/room/emoticon/";
+    private static final String CHAT_ROOM_ENTER_DESTINATION = "/sub/chat/room/";
+    private static final String CHAT_ROOM_PRIVATE_DESTINATION = "/sub/private/channel/";
     private static final String SUB_URL = "/sub/chat/room/question-notice/";
+    private static final String TIMEOUT_NOTICE_SUB_URL = "/sub/chat/room/timeout/";
     
-    public static String getRoomDestination(long roomId) {
-        return String.format("%s/%s", CHAT_ROOM_EMOTICON_DESTINATION, roomId);
+    public static String getRoomEmoticonDestination(long roomId) {
+        return CHAT_ROOM_EMOTICON_DESTINATION + roomId;
+    }
+
+    public static String getRoomEnterDestination(long roomId) {
+        return CHAT_ROOM_ENTER_DESTINATION + roomId;
     }
 
     public static String getRoomUserDestination(long roomId, long userId) {
-        return String.format("%s/%s", getRoomDestination(roomId), userId);
+        return getRoomEmoticonDestination(roomId) + "/" + userId;
     }
     
-    public static String generateSubUrl(long roomId) {
+    public static String generateQuestionNoticeSubUrl(long roomId) {
         return SUB_URL + roomId;
     }
     
     public static String getPrivateChannelDestination(long userId) {
-        return String.format("%s/%s", CHAT_ROOM_PRIVATE_DESTINATION, userId);
+        return CHAT_ROOM_PRIVATE_DESTINATION + userId;
+    }
+
+    public String generateTimeoutSubUrl(long roomId) {
+        return TIMEOUT_NOTICE_SUB_URL + roomId;
     }
 
 }

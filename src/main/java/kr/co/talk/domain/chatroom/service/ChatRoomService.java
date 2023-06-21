@@ -1,28 +1,7 @@
 package kr.co.talk.domain.chatroom.service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
-
-import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
-import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
-import kr.co.talk.domain.chatroom.dto.FeedbackDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto;
-import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
-import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto.FindChatroomResponseDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto.UserNameResponseDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto.UserStatusDto;
+import kr.co.talk.domain.chatroom.dto.*;
+import kr.co.talk.domain.chatroom.dto.RequestDto.*;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
@@ -35,6 +14,14 @@ import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -157,6 +144,7 @@ public class ChatRoomService {
 
 		log.info("chatroom.getChatroomId :: {} ", chatroom.getChatroomId());
 
+		// 대화 종료 알림 알리기 위해 redis에 정보 세팅
 		redisService.pushMap(RedisConstants.ROOM_NOTICE, String.valueOf(chatroom.getChatroomId()), chatroomNoticeDto);
 	}
 
@@ -212,7 +200,8 @@ public class ChatRoomService {
 	}
 	
 	public List<UserNameResponseDto> findUsersChatroom(long roomId, long userId){
-	    List<Long> userIds = chatroomRepository.findByUsersInChatroom(roomId, userId);
+	    List<Long> userIds = chatroomRepository.findByUsersInChatroom(roomId, userId);
+
 	    return userClient.userNameNickname(userIds);
 	}
 }

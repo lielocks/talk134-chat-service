@@ -28,7 +28,7 @@ public class EmoticonController {
             return;
         }
         try {
-            template.convertAndSend(StompConstants.getRoomDestination(roomId), emoticonService.saveEmoticonHistoryToRedis(payload));
+            template.convertAndSend(StompConstants.getRoomEmoticonDestination(roomId), emoticonService.saveEmoticonHistoryToRedis(payload));
             template.convertAndSend(
                     StompConstants.getRoomUserDestination(roomId, payload.getToUserId()),
                     emoticonService.getUserReceivedEmoticons(roomId, payload.getToUserId()));
@@ -40,14 +40,14 @@ public class EmoticonController {
     }
 
     private void sendRoomNotFoundError(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
+        template.convertAndSend(StompConstants.getRoomEmoticonDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
     }
 
     private void sendIllegalArgumentError(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
+        template.convertAndSend(StompConstants.getRoomEmoticonDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
     }
 
     private void sendInternalError(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.SERVER_ERROR));
+        template.convertAndSend(StompConstants.getRoomEmoticonDestination(roomId), ErrorDto.createErrorDto(CustomError.SERVER_ERROR));
     }
 }

@@ -29,7 +29,7 @@ public class ChatController {
     public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
         try {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
-            template.convertAndSend(StompConstants.getRoomDestination(chatEnterDto.getRoomId()), responseDto);
+            template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
             headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
             headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
@@ -59,18 +59,18 @@ public class ChatController {
     }
 
     private void blockSameUser(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
-        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", StompConstants.getRoomDestination(roomId));
+        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
+        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", StompConstants.getRoomEnterDestination(roomId));
     }
 
     private void chatroomNotExist(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
-        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", StompConstants.getRoomDestination(roomId));
+        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
+        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId));
     }
 
     private void userNotExist(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
-        log.info("get the Destination of USER NOT EXIST ERROR :: {}", StompConstants.getRoomDestination(roomId));
+        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
+        log.info("get the Destination of USER NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId));
     }
 
 }

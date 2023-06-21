@@ -25,7 +25,7 @@ public class QuestionNoticeController {
         }
         try {
             QuestionNoticeResponseDto dto = questionNoticeService.getQuestionNotice(roomId);
-            template.convertAndSend(StompConstants.generateSubUrl(roomId), dto);
+            template.convertAndSend(StompConstants.generateQuestionNoticeSubUrl(roomId), dto);
         } catch (CustomException e) {
             sendError(roomId, e.getCustomError());
         }
@@ -33,6 +33,6 @@ public class QuestionNoticeController {
 
    
     private void sendError(long roomId, CustomError error) {
-        template.convertAndSend(StompConstants.generateSubUrl(roomId), ErrorDto.createErrorDto(error));
+        template.convertAndSend(StompConstants.generateQuestionNoticeSubUrl(roomId), ErrorDto.createErrorDto(error));
     }
 }

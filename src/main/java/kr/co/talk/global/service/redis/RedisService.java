@@ -43,7 +43,6 @@ import java.util.stream.Collectors;
 public class RedisService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisTemplate<String, String> redisTemplate;
-    private final RedisTemplate<String, String> chatroomNoticeDtoRedisTemplate;
     private final RedisTemplate<String, Integer> integerRedisTemplate;
     private final ObjectMapper objectMapper;
 

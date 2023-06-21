@@ -13,6 +13,7 @@ import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.FindChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.UserNameResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserStatusDto;
 import kr.co.talk.global.config.FeignLoggingConfig;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -70,4 +71,7 @@ public interface UserClient {
     
     @GetMapping("/user/findTeamCode/{userId}")
     public TeamCodeResponseDto findTeamCode(@PathVariable("userId") long userId);
+    
+    @GetMapping("/user/userName/nickname/{userIds}")
+    public List<UserNameResponseDto> userNameNickname(@PathVariable("userIds") List<Long> userIds);
 }

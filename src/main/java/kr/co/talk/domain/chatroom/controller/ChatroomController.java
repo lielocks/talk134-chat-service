@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -60,6 +61,11 @@ public class ChatroomController {
 		return ResponseEntity.ok(chatRoomService.findChatRoomsByName(userId, name));
 	}
 
+	@GetMapping("/find-users/chatroom/{roomId}")
+	public ResponseEntity<?> findUsersChatroom(@RequestHeader(value = "userId") Long userId, @PathVariable(name = "roomId") String roomId){
+        return ResponseEntity.ok(chatRoomService.findUsersChatroom(Long.valueOf(roomId), userId));
+	}
+	
 	/**
 	 * 대화방 생성 api
 	 * 

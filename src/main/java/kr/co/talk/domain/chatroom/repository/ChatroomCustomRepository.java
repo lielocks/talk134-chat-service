@@ -8,4 +8,5 @@ public interface ChatroomCustomRepository {
 
 	public List<Chatroom> findByTeamCodeAndName(String teamCode, List<Long> userIds);
 	
+	public List<Long> findByUsersInChatroom(long roomId, long userId);
 }

@@ -21,6 +21,7 @@ import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.FindChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.UserNameResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserStatusDto;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
@@ -208,5 +209,10 @@ public class ChatRoomService {
 		
 		// kafka를 통해 채팅방 종료 이벤트 메세지 보냄
 		chatRoomSender.sendEndChatting(feedback.getRoomId(), userId);
+	}
+	
+	public List<UserNameResponseDto> findUsersChatroom(long roomId, long userId){
+	    List<Long> userIds = chatroomRepository.findByUsersInChatroom(roomId, userId);
+	    return userClient.userNameNickname(userIds);
 	}
 }

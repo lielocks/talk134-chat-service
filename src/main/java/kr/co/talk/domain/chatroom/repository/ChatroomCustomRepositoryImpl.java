@@ -33,4 +33,14 @@ public class ChatroomCustomRepositoryImpl implements ChatroomCustomRepository {
                 .fetch();
     }
 
+    @Override
+    public List<Long> findByUsersInChatroom(long roomId, long userId) {
+        return jpaQueryFactory.select(chatroomUsers.userId)
+                .from(chatroomUsers)
+                .where(chatroomUsers.chatroom.chatroomId.eq(roomId))
+                .fetch();
+    }
+    
+    
+
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import kr.co.talk.domain.chatroom.dto.ChatEnterResponseDto;
 import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
+import kr.co.talk.domain.chatroom.dto.SocketResponseDto;
 import kr.co.talk.domain.chatroom.dto.SocketType;
 import kr.co.talk.domain.chatroom.model.event.CreateRoomNotiEventModel;
 import kr.co.talk.global.constants.RedisConstants;
@@ -40,7 +41,7 @@ public class ChatroomTransactionListener {
         redisService.pushMap(RedisConstants.ROOM_NOTICE, String.valueOf(chatroomNoticeDto.getRoomId()), chatroomNoticeDto);
         
         eventModel.getUserId().forEach(uid->{
-            ChatEnterResponseDto responseDto = ChatEnterResponseDto.builder()
+            SocketResponseDto responseDto = SocketResponseDto.builder()
                     .type(SocketType.NEW_CHATROOM)
                     .build();
             template.convertAndSend(StompConstants.getPrivateChannelDestination(uid), responseDto);

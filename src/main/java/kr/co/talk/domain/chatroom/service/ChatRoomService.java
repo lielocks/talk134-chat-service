@@ -7,16 +7,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-
+import ch.qos.logback.core.subst.Token.Type;
+import kr.co.talk.domain.chatroom.dto.ChatEnterResponseDto;
 import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
 import kr.co.talk.domain.chatroom.dto.ChatroomNoticeDto;
 import kr.co.talk.domain.chatroom.dto.FeedbackDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto;
 import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
+import kr.co.talk.domain.chatroom.dto.SocketType;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.FindChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.TeamCodeResponseDto;
@@ -25,11 +29,13 @@ import kr.co.talk.domain.chatroom.dto.RequestDto.UserNameResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.UserStatusDto;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
+import kr.co.talk.domain.chatroom.model.event.CreateRoomNotiEventModel;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.global.client.UserClient;
 import kr.co.talk.global.constants.RedisConstants;
+import kr.co.talk.global.constants.StompConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
@@ -46,6 +52,7 @@ public class ChatRoomService {
 	private final RedisService redisService;
 	private final UserClient userClient;
 	private final ChatRoomSender chatRoomSender;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	/**
 	 * 닉네임 또는 이름으로 채팅방 목록 조회
@@ -154,10 +161,11 @@ public class ChatRoomService {
 				.timeout(requiredCreateChatroomInfo.getTimeout())
 				.createTime(System.currentTimeMillis())
 				.build();
-
-		log.info("chatroom.getChatroomId :: {} ", chatroom.getChatroomId());
-
-		redisService.pushMap(RedisConstants.ROOM_NOTICE, String.valueOf(chatroom.getChatroomId()), chatroomNoticeDto);
+		
+		CreateRoomNotiEventModel eventModel = CreateRoomNotiEventModel.builder().userId(userList).chatroomNoticeDto(chatroomNoticeDto).build();
+		
+		log.info("chatroom create publish event");
+		applicationEventPublisher.publishEvent(eventModel);
 	}
 
 	/**

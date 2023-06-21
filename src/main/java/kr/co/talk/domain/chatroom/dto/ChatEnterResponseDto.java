@@ -9,6 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatEnterResponseDto {
+    private SocketType type;
      private String checkInFlag;
      private Long requestId;
      private List<ChatroomUserInfo> chatroomUserInfos;

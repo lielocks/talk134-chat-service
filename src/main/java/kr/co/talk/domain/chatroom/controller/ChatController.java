@@ -3,6 +3,7 @@ package kr.co.talk.domain.chatroom.controller;
 import kr.co.talk.domain.chatroom.dto.ChatEnterDto;
 import kr.co.talk.domain.chatroom.dto.ChatEnterResponseDto;
 import kr.co.talk.domain.chatroom.service.ChatService;
+import kr.co.talk.global.constants.StompConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.exception.ErrorDto;
@@ -21,7 +22,6 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 @Slf4j
 @RequiredArgsConstructor
 public class ChatController {
-    private static final String CHAT_ROOM_ENTER_DESTINATION = "/sub/chat/room";
     private final ChatService chatService;
     private final SimpMessagingTemplate template;
 
@@ -29,7 +29,7 @@ public class ChatController {
     public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
         try {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
-            template.convertAndSend(getRoomDestination(chatEnterDto.getRoomId()), responseDto);
+            template.convertAndSend(StompConstants.getRoomDestination(chatEnterDto.getRoomId()), responseDto);
             headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
             headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
@@ -58,24 +58,19 @@ public class ChatController {
         log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
     }
 
-
-    private String getRoomDestination(Long roomId) {
-        return String.format("%s/%s", CHAT_ROOM_ENTER_DESTINATION, roomId);
-    }
-
     private void blockSameUser(Long roomId) {
-        template.convertAndSend(getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
-        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", getRoomDestination(roomId));
+        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
+        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", StompConstants.getRoomDestination(roomId));
     }
 
     private void chatroomNotExist(Long roomId) {
-        template.convertAndSend(getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
-        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", getRoomDestination(roomId));
+        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
+        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", StompConstants.getRoomDestination(roomId));
     }
 
     private void userNotExist(Long roomId) {
-        template.convertAndSend(getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
-        log.info("get the Destination of USER NOT EXIST ERROR :: {}", getRoomDestination(roomId));
+        template.convertAndSend(StompConstants.getRoomDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
+        log.info("get the Destination of USER NOT EXIST ERROR :: {}", StompConstants.getRoomDestination(roomId));
     }
 
 }

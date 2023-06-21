@@ -2,6 +2,7 @@ package kr.co.talk.domain.questionnotice.controller;
 
 import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto;
 import kr.co.talk.domain.questionnotice.service.QuestionNoticeService;
+import kr.co.talk.global.constants.StompConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.exception.ErrorDto;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 @Controller
 public class QuestionNoticeController {
-    private static final String SUB_URL = "/sub/chat/room/question-notice/";
     private final QuestionNoticeService questionNoticeService;
     private final SimpMessagingTemplate template;
 
@@ -25,17 +25,14 @@ public class QuestionNoticeController {
         }
         try {
             QuestionNoticeResponseDto dto = questionNoticeService.getQuestionNotice(roomId);
-            template.convertAndSend(generateSubUrl(roomId), dto);
+            template.convertAndSend(StompConstants.generateSubUrl(roomId), dto);
         } catch (CustomException e) {
             sendError(roomId, e.getCustomError());
         }
     }
 
-    private String generateSubUrl(long roomId) {
-        return SUB_URL + roomId;
-    }
-
+   
     private void sendError(long roomId, CustomError error) {
-        template.convertAndSend(generateSubUrl(roomId), ErrorDto.createErrorDto(error));
+        template.convertAndSend(StompConstants.generateSubUrl(roomId), ErrorDto.createErrorDto(error));
     }
 }

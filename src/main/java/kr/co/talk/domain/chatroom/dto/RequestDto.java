@@ -75,4 +75,14 @@ public class RequestDto {
         private int statusStress;
         private int statusStable;
     }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserNameResponseDto {
+        long userId;
+        String name;
+        String nickname;
+    }
 }

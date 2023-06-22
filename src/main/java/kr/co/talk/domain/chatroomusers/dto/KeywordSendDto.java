@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KeywordSendDto {
+    private Long userId;
     private Long roomId;
     private List<Long> keywordCode;
 }

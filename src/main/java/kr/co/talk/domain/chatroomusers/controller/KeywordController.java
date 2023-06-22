@@ -19,15 +19,15 @@ public class KeywordController {
     private final KeywordService keywordService;
     private final RedisService redisService;
 
-    @PostMapping("/select-keyword")
-    public SocketFlagResponseDto selectKeywordChatroom(@RequestHeader long userId, @RequestBody KeywordSendDto sendDto) {
-        return keywordService.setQuestionWithFlag(userId, sendDto);
-    }
+//    @PostMapping("/select-keyword")
+//    public SocketFlagResponseDto selectKeywordChatroom(@RequestHeader long userId, @RequestBody KeywordSendDto sendDto) {
+//        return keywordService.setQuestionWithFlag(userId, sendDto);
+//    }
 
-    @PostMapping("/question-order")
-    public AllRegisteredDto questionOrder(@RequestHeader long userId, @RequestBody QuestionCodeDto codeDto) {
-        return keywordService.setQuestionOrder(userId, codeDto);
-    }
+//    @PostMapping("/question-order")
+//    public AllRegisteredDto questionOrder(@RequestHeader long userId, @RequestBody QuestionCodeDto codeDto) {
+//        return keywordService.setQuestionOrder(userId, codeDto);
+//    }
 
     @GetMapping("/keyword/{roomId}")
     public List<TopicListDto> getKeywordQuestionList(@RequestHeader long userId, @PathVariable long roomId) {

@@ -33,11 +33,11 @@ public class KeywordService {
     private final RedisService redisService;
     private final UserClient userClient;
 
-    public SocketFlagResponseDto setQuestionWithFlag (long userId, KeywordSendDto keywordSendDto) {
+    public SocketFlagResponseDto setQuestionWithFlag (KeywordSendDto keywordSendDto) {
         List<Long> keywordCode = keywordSendDto.getKeywordCode();
         List<TopicListDto> responseDto = new ArrayList<>();
-        boolean within24Hours = redisService.isWithin24Hours(keywordSendDto.getRoomId(), userId);
-        setUserQuestionList(userId, keywordCode, responseDto, within24Hours);
+        boolean within24Hours = redisService.isWithin24Hours(keywordSendDto.getRoomId(), keywordSendDto.getUserId());
+        setUserQuestionList(keywordSendDto.getUserId(), keywordCode, responseDto, within24Hours);
 
         List<Long> questionCode = responseDto.stream()
                 .map(TopicListDto::getQuestionId)
@@ -49,12 +49,19 @@ public class KeywordService {
                 .questionCode(questionCode)
                 .build();
 
-        redisService.pushQuestionList(keywordSendDto.getRoomId(), userId, keywordSetDto);
-        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(keywordSendDto.getRoomId(), userId);
+        redisService.pushQuestionList(keywordSendDto.getRoomId(), keywordSendDto.getUserId(), keywordSetDto);
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(keywordSendDto.getRoomId(), keywordSendDto.getUserId());
         user.setSocketFlag(4);
 
+        List<SocketFlagResponseDto.TopicListDto> topicListDtoList = new ArrayList<>();
+        for (int i = 0; i < keywordCode.size(); i++ ) {
+            SocketFlagResponseDto.TopicListDto dto = SocketFlagResponseDto.TopicListDto.builder().keywordId(keywordCode.get(i)).keywordName(keywordRepository.findByKeywordId(keywordCode.get(i)).getName())
+                    .questionId(questionCode.get(i)).questionName(questionRepository.findByQuestionId(questionCode.get(i)).getContent()).depth(convertIdIntoDepth(questionCode.get(i))).build();
+            topicListDtoList.add(dto);
+        }
+
         usersRepository.save(user);
-        return SocketFlagResponseDto.builder().socketFlag(4).build();
+        return SocketFlagResponseDto.builder().topicList(topicListDtoList).socketFlag(4).build();
     }
 
     public List<TopicListDto> sendTopicList(TopicListRedisDto listDto) {
@@ -105,24 +112,23 @@ public class KeywordService {
                 responseDto.add(topicListDto);
             }
         }
-
     }
 
-    public AllRegisteredDto setQuestionOrder(long userId, QuestionCodeDto listDto) {
+    public AllRegisteredDto setQuestionOrder(QuestionCodeDto listDto) {
         boolean registered;
-        List<Long> questionCode = redisService.findQuestionCode(listDto.getRoomId(), userId);
+        List<Long> questionCode = redisService.findQuestionCode(listDto.getRoomId(), listDto.getUserId());
 
         if (!questionCode.containsAll(listDto.getQuestionCodeList())) {
             throw new CustomException(CustomError.QUESTION_ID_NOT_MATCHED);
         }
-        Long countValue = redisService.setQuestionCode(userId, listDto.getRoomId(), listDto);
+        Long countValue = redisService.setQuestionCode(listDto.getUserId(), listDto.getRoomId(), listDto);
         List<ChatroomUsers> users = usersRepository.findChatroomUsersByChatroom_ChatroomId(listDto.getRoomId());
         registered = users.size() == countValue;
-        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(listDto.getRoomId(), userId);
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(listDto.getRoomId(), listDto.getUserId());
         user.setSocketFlag(5);
         usersRepository.save(user);
-        boolean allMatch = users.stream().allMatch(chatroomUsers -> chatroomUsers.getSocketFlag() == 5);
-        if (allMatch) {
+
+        if (registered) {
             for (ChatroomUsers setUser : users) {
                 setUser.setSocketFlag(6);
             }

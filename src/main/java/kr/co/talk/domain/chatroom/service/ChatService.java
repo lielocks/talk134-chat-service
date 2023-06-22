@@ -44,7 +44,7 @@ public class ChatService {
         List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
         ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
 
-        if (!chatroomUsersByUserId.isEntered()) {
+//        if (!chatroomUsersByUserId.isEntered()) {
             chatroomUsersByUserId.activeFlagOn(flag);
             chatroomUsersByUserId.setEntered(true);
 
@@ -91,7 +91,7 @@ public class ChatService {
             }
 
             return chatUserInfos;
-        } else return null;
+//        } else return null;
     }
 
     @Transactional

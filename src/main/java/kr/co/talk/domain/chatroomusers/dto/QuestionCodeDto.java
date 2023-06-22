@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionCodeDto {
+    private long userId;
     private long roomId;
     private List<Long> questionCodeList;
 }

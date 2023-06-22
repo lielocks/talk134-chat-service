@@ -28,8 +28,16 @@ public class ChatController {
     @MessageMapping("/enter")
     public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
         try {
-            ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
-            template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
+            if (!chatService.userEnteredStatus(chatEnterDto.getUserId(), chatEnterDto.getRoomId())) {
+                ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
+                log.info("responseDto :: {}", responseDto);
+                template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
+            } else {
+                ChatEnterResponseDto oneResponseDto = chatService.getOneResponseDto(chatEnterDto);
+                log.info("oneResponseDto :: {}", oneResponseDto);
+                template.convertAndSend(StompConstants.getPrivateChannelDestination(chatEnterDto.getUserId()), oneResponseDto);
+            }
+
             headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
             headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());

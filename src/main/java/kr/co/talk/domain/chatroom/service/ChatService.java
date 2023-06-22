@@ -1,8 +1,6 @@
 package kr.co.talk.domain.chatroom.service;
 
-import kr.co.talk.domain.chatroom.dto.ChatEnterDto;
-import kr.co.talk.domain.chatroom.dto.ChatEnterResponseDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto;
+import kr.co.talk.domain.chatroom.dto.*;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
@@ -18,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,7 +32,7 @@ public class ChatService {
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
-        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).requestId(chatEnterDto.getUserId()).chatroomUserInfos(getResponseDto(chatEnterDto)).build();
+        return ChatEnterResponseDto.builder().type(SocketType.NEW_CHATROOM).checkInFlag(after10Minutes(chatEnterDto)).requestId(chatEnterDto.getUserId()).chatroomUserInfos(getResponseDto(chatEnterDto)).build();
     }
 
     private List<ChatEnterResponseDto.ChatroomUserInfo> getResponseDto(ChatEnterDto chatEnterDto) {
@@ -44,51 +43,82 @@ public class ChatService {
         }
         List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
         ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
-        chatroomUsersByUserId.activeFlagOn(flag);
 
-        List<Long> idList = chatroomUsers.stream()
-                .map(ChatroomUsers::getUserId)
-                .collect(Collectors.toList());
+        if (!chatroomUsersByUserId.isEntered()) {
+            chatroomUsersByUserId.activeFlagOn(flag);
+            chatroomUsersByUserId.setEntered(true);
 
-        if (idList == null) {
-            throw new CustomException(CustomError.USER_DOES_NOT_EXIST);
-        }
+            List<Long> idList = chatroomUsers.stream()
+                    .map(ChatroomUsers::getUserId)
+                    .collect(Collectors.toList());
 
-        List<RequestDto.ChatRoomEnterResponseDto> enterResponseDto = userClient.requiredEnterInfo(chatEnterDto.getUserId(), idList);
-        List<ChatroomUsers> usersByUserId = usersRepository.findChatroomUsersByUserId(chatEnterDto.getUserId());
+            if (idList == null) {
+                throw new CustomException(CustomError.USER_DOES_NOT_EXIST);
+            }
 
-        List<Chatroom> chatrooms = new ArrayList<>();
-        List<Long> roomIdList = new ArrayList<>();
+            List<RequestDto.ChatRoomEnterResponseDto> enterResponseDto = userClient.requiredEnterInfo(chatEnterDto.getUserId(), idList);
+            List<ChatroomUsers> usersByUserId = usersRepository.findChatroomUsersByUserId(chatEnterDto.getUserId());
 
-        usersByUserId.forEach(ChatroomUsers -> {
-            Chatroom usersChatroom = ChatroomUsers.getChatroom();
-            chatrooms.add(usersChatroom);
-            roomIdList.add(usersChatroom.getChatroomId());
-        });
+            List<Chatroom> chatrooms = new ArrayList<>();
+            List<Long> roomIdList = new ArrayList<>();
 
-        int finalFlag = socketFlagStatus(chatEnterDto.getSocketFlag(), chatEnterDto);
-        List<ChatEnterResponseDto.ChatroomUserInfo> chatUserInfos = new ArrayList<>();
-        for (Long userId : idList) {
+            usersByUserId.forEach(ChatroomUsers -> {
+                Chatroom usersChatroom = ChatroomUsers.getChatroom();
+                chatrooms.add(usersChatroom);
+                roomIdList.add(usersChatroom.getChatroomId());
+            });
 
-            RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.stream()
-                    .filter(dto -> dto.getUserId().equals(userId))
-                    .findFirst()
-                    .orElseThrow(() -> new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST));
+            int finalFlag = socketFlagStatus(chatEnterDto.getSocketFlag(), chatEnterDto);
+            List<ChatEnterResponseDto.ChatroomUserInfo> chatUserInfos = new ArrayList<>();
+            for (Long userId : idList) {
 
-            ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), userId);
+                RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.stream()
+                        .filter(dto -> dto.getUserId().equals(userId))
+                        .findFirst()
+                        .orElseThrow(() -> new CustomException(CustomError.CHATROOM_DOES_NOT_EXIST));
 
-            ChatEnterResponseDto.ChatroomUserInfo responseUserInfo = new ChatEnterResponseDto.ChatroomUserInfo(
-                    enterDto.getUserId(),
-                    enterDto.getNickname(),
-                    enterDto.getUserName(),
-                    enterDto.getProfileUrl(),
-                    byChatroomIdAndUserId.isActiveFlag(),
-                    finalFlag
-            );
-            chatUserInfos.add(responseUserInfo);
-        }
+                ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), userId);
 
-        return chatUserInfos;
+                ChatEnterResponseDto.ChatroomUserInfo responseUserInfo = new ChatEnterResponseDto.ChatroomUserInfo(
+                        enterDto.getUserId(),
+                        enterDto.getNickname(),
+                        enterDto.getUserName(),
+                        enterDto.getProfileUrl(),
+                        byChatroomIdAndUserId.isActiveFlag(),
+                        finalFlag
+                );
+                chatUserInfos.add(responseUserInfo);
+            }
+
+            return chatUserInfos;
+        } else return null;
+    }
+
+    @Transactional
+    public ChatEnterResponseDto getOneResponseDto(ChatEnterDto chatEnterDto) {
+        ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
+
+        if (chatroomUsersByUserId.isEntered()) {
+        List<RequestDto.ChatRoomEnterResponseDto> enterResponseDto = userClient.requiredEnterInfo(chatEnterDto.getUserId(), Collections.singletonList(chatroomUsersByUserId.getUserId()));
+
+        RequestDto.ChatRoomEnterResponseDto enterDto = enterResponseDto.get(0);
+        ChatroomUsers byChatroomIdAndUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
+
+        ChatEnterResponseDto.ChatroomUserInfo responseUserInfo = new ChatEnterResponseDto.ChatroomUserInfo(
+                enterDto.getUserId(),
+                enterDto.getNickname(),
+                enterDto.getUserName(),
+                enterDto.getProfileUrl(),
+                byChatroomIdAndUserId.isActiveFlag(),
+                byChatroomIdAndUserId.getSocketFlag()
+        );
+        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).requestId(chatEnterDto.getUserId()).chatroomUserInfos(Collections.singletonList(responseUserInfo)).type(SocketType.RE_ENTER).build();
+        } else return null;
+    }
+
+    public boolean userEnteredStatus(long userId, long roomId) {
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(roomId, userId);
+        return user != null && user.isEntered();
     }
 
     private void setUserInfoRedis(ChatEnterDto chatEnterDto) {
@@ -152,12 +182,6 @@ public class ChatService {
             user.setSocketFlag(flag);
         }
         return flag;
-    }
-
-    public Long setReloadId(ChatEnterDto chatEnterDto) {
-        if (usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId()).getSocketFlag() > chatEnterDto.getSocketFlag()) {
-            return chatEnterDto.getUserId();
-        } else return null;
     }
 
     private List<ChatroomUsers> getChatroomUsers(Chatroom chatroom) {

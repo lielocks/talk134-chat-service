@@ -33,6 +33,7 @@ public class ChatroomTimeoutScheduler {
         chatroomNoticeEntry.forEach((roomId, value) -> {
             ChatroomNoticeDto cn = (ChatroomNoticeDto) value;
             long currentTime = System.currentTimeMillis();
+            redisService.deleteCountAndChatroomKey(Long.parseLong(roomId));
 
             // 5분 전 알림
             if (cn.getCreateTime() + cn.getTimeout() > currentTime

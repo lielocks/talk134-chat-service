@@ -147,28 +147,35 @@ public class RedisService {
                 keywordSetDto.setRegisteredQuestionOrder(count);
                 String writeValueAsString = objectMapper.writeValueAsString(keywordSetDto);
                 valueOps.set(key, writeValueAsString);
-            } else {
+            }
+
+            else if (findRegisteredCount(roomId, userId) == 1) {
                 String valueList = getValues(key);
                 KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList, KeywordSetDto.class);
 
                 int counted = keywordDtoValue.getRegisteredQuestionOrder();
                 counted += 1;
                 keywordDtoValue.setRegisteredQuestionOrder(counted);
+                keywordDtoValue.setQuestionCode(keywordSetDto.getQuestionCode());
+                keywordDtoValue.setKeywordCode(keywordSetDto.getKeywordCode());
                 String writeValueAsString = objectMapper.writeValueAsString(keywordDtoValue);
 
                 valueOps.set(key, writeValueAsString);
             }
-            if (findRegisteredCount(roomId, userId) > 2) {
+
+            else if (findRegisteredCount(roomId, userId) == 2) {
                 String valueList = getValues(key);
                 KeywordSetDto keywordDtoValue = objectMapper.readValue(valueList, KeywordSetDto.class);
 
-                int counted = keywordDtoValue.getRegisteredQuestionOrder();
-                counted -= 1;
-                keywordDtoValue.setRegisteredQuestionOrder(counted);
+                keywordDtoValue.setRegisteredQuestionOrder(keywordDtoValue.getRegisteredQuestionOrder());
+                keywordDtoValue.setQuestionCode(keywordDtoValue.getQuestionCode());
+                keywordDtoValue.setKeywordCode(keywordDtoValue.getKeywordCode());
+
                 String writeValueAsString = objectMapper.writeValueAsString(keywordDtoValue);
                 valueOps.set(key, writeValueAsString);
                 throw new CustomException(CustomError.QUESTION_ALREADY_REGISTERED);
             }
+
         } catch (JsonProcessingException e) {
             log.error("json parse error", e);
             throw new RuntimeException(e);
@@ -249,7 +256,7 @@ public class RedisService {
      */
     public void pushUserChatRoom(long userId, long roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;
-        valueOps.setIfAbsent(key, String.valueOf(roomId), Duration.ofMinutes(10));
+        valueOps.setIfAbsent(key, String.valueOf(roomId));
     }
 
     public void roomCreateTime (long roomId, long userId) {
@@ -339,6 +346,26 @@ public class RedisService {
             return objectMapper.readValue(value, QuestionNoticeManagementRedisDto.class);
         } catch (JsonProcessingException e) {
             return null;
+        }
+    }
+
+    public void deleteCountAndChatroomKey(long roomId) {
+        String key = "*" + RedisConstants.CHATROOM;
+        String countKey = roomId + "_" + "*" + RedisConstants.COUNT;
+        String roomCountKey = roomId + RedisConstants.COUNT;
+
+        if (roomCountKey != null) {
+            integerRedisTemplate.delete(roomCountKey);
+        }
+
+        Set<String> countKeys = integerRedisTemplate.keys(countKey);
+        if (countKeys != null) {
+            integerRedisTemplate.delete(countKeys);
+        }
+
+        Set<String> chatroomKeys = redisTemplate.keys(key);
+        if (chatroomKeys != null) {
+            redisTemplate.delete(chatroomKeys);
         }
     }
 

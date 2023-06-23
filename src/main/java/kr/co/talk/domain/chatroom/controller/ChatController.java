@@ -42,7 +42,7 @@ public class ChatController {
 //            if (!chatService.userEnteredStatus(chatEnterDto.getUserId(), chatEnterDto.getRoomId())) {
 //                ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
 //                log.info("responseDto :: {}", responseDto);
-//                template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
+//                template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId(), chatEnterDto.getUserId()), responseDto);
 //            } else {
 //                ChatEnterResponseDto oneResponseDto = chatService.getOneResponseDto(chatEnterDto);
 //                log.info("oneResponseDto :: {}", oneResponseDto);
@@ -55,11 +55,11 @@ public class ChatController {
 //        }
 //        catch (CustomException e) {
 //            if (e.getCustomError() == CustomError.CHATROOM_DOES_NOT_EXIST) {
-//                chatroomNotExist(chatEnterDto.getRoomId());
+//                chatroomNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
 //            } else if (e.getCustomError() == CustomError.USER_DOES_NOT_EXIST) {
-//                userNotExist(chatEnterDto.getRoomId());
+//                userNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
 //            } else if (e.getCustomError() == CustomError.CHATROOM_USER_ALREADY_JOINED) {
-//                blockSameUser(chatEnterDto.getRoomId());
+//                blockSameUser(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
 //            }
 //        }
 //    }
@@ -69,7 +69,7 @@ public class ChatController {
         try {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
             log.info("responseDto :: {}", responseDto);
-            template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
+            template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId(), chatEnterDto.getUserId()), responseDto);
 
             headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
             headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
@@ -77,11 +77,11 @@ public class ChatController {
         }
         catch (CustomException e) {
             if (e.getCustomError() == CustomError.CHATROOM_DOES_NOT_EXIST) {
-                chatroomNotExist(chatEnterDto.getRoomId());
+                chatroomNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
             } else if (e.getCustomError() == CustomError.USER_DOES_NOT_EXIST) {
-                userNotExist(chatEnterDto.getRoomId());
+                userNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
             } else if (e.getCustomError() == CustomError.CHATROOM_USER_ALREADY_JOINED) {
-                blockSameUser(chatEnterDto.getRoomId());
+                blockSameUser(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
             }
         }
     }
@@ -141,19 +141,19 @@ public class ChatController {
         log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
     }
 
-    private void blockSameUser(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
-        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", StompConstants.getRoomEnterDestination(roomId));
+    private void blockSameUser(Long roomId, Long userId) {
+        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId, userId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
+        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", StompConstants.getRoomEnterDestination(roomId, userId));
     }
 
-    private void chatroomNotExist(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
-        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId));
+    private void chatroomNotExist(Long roomId, Long userId) {
+        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId, userId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
+        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId, userId));
     }
 
-    private void userNotExist(Long roomId) {
-        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
-        log.info("get the Destination of USER NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId));
+    private void userNotExist(Long roomId, Long userId) {
+        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId, userId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
+        log.info("get the Destination of USER NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId, userId));
     }
 
     private void keywordNotMatch(Long roomId, Long userId) {

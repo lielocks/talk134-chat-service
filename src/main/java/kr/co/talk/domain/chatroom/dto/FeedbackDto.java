@@ -26,12 +26,7 @@ public class FeedbackDto implements Serializable {
 	private int statusRelation;
 	private int statusStress;
 	private int statusStable;
-
-	private int statusEnergyBefore;
-	private int statusRelationBefore;
-	private int statusStressBefore;
-	private int statusStableBefore;
-
+	
 	private List<Feedback> feedback;
 
 	@Data

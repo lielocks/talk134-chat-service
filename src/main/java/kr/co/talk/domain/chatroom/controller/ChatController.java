@@ -134,11 +134,13 @@ public class ChatController {
         // 어떤 userId, roomId 정보를 가진 session 이 끊겼는지 get message
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
 
-        long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
-        long roomId = (Long) headerAccessor.getSessionAttributes().get("roomId");
+        if (headerAccessor.getSessionAttributes().get("userId") != null && headerAccessor.getSessionAttributes().get("roomId") != null) {
+            long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
+            long roomId = (Long) headerAccessor.getSessionAttributes().get("roomId");
+            chatService.disconnectUserSetFalse(userId, roomId);
+            log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
+        }
 
-        chatService.disconnectUserSetFalse(userId, roomId);
-        log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
     }
 
     private void blockSameUser(Long roomId) {

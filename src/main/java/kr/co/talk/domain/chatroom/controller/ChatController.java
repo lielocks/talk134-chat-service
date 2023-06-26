@@ -68,9 +68,14 @@ public class ChatController {
     public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
         try {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
-            log.info("responseDto :: {}", responseDto);
-            template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId(), chatEnterDto.getUserId()), responseDto);
 
+            if (!chatService.socketFlagCommonCheck(chatEnterDto.getRoomId())) {
+                log.info("responseDto :: {}", responseDto);
+                template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId(), chatEnterDto.getUserId()), responseDto);
+            } else {
+                 template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
+                log.info("common flag response :: {}", responseDto);
+            }
             headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
             headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());

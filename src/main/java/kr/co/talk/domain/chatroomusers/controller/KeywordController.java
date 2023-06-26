@@ -34,4 +34,9 @@ public class KeywordController {
         TopicListRedisDto topicListRedisDto = redisService.returnTopicList(userId, roomId);
         return keywordService.sendTopicList(topicListRedisDto);
     }
+    
+    @GetMapping("/keyword/name/{questionIds}")
+    public List<String> keywordName(@PathVariable("questionIds") List<Long> questionIds){
+        return keywordService.getQuestion(questionIds);
+    }
 }

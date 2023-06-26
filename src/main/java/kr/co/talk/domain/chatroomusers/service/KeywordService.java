@@ -180,5 +180,12 @@ public class KeywordService {
                 .depth(convertIdIntoDepth(question.getQuestionId()))
                 .build();
     }
+    
+    public List<String> getQuestion(List<Long> questionIds){
+        return questionRepository.findAllById(questionIds)
+                .stream()
+                .map(Question::getContent)
+                .collect(Collectors.toList());
+    }
 
 }

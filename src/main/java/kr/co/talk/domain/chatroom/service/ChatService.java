@@ -235,13 +235,4 @@ public class ChatService {
         return verify;
     }
 
-    public boolean socketFlagCommonCheck(long roomId) {
-        Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(roomId);
-        List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
-        if (chatroomUsers.stream().allMatch(user -> user.getSocketFlag() == 1) || chatroomUsers.stream().allMatch(user -> user.getSocketFlag() == 3)) {
-            return true;
-        }
-        return false;
-    }
-
 }

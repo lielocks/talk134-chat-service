@@ -68,25 +68,20 @@ public class ChatController {
     public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
         try {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
+            template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
+            log.info("response :: {}", responseDto);
 
-            if (!chatService.socketFlagCommonCheck(chatEnterDto.getRoomId())) {
-                log.info("responseDto :: {}", responseDto);
-                template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId(), chatEnterDto.getUserId()), responseDto);
-            } else {
-                 template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
-                log.info("common flag response :: {}", responseDto);
-            }
             headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
             headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }
         catch (CustomException e) {
             if (e.getCustomError() == CustomError.CHATROOM_DOES_NOT_EXIST) {
-                chatroomNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
+                chatroomNotExist(chatEnterDto.getRoomId());
             } else if (e.getCustomError() == CustomError.USER_DOES_NOT_EXIST) {
-                userNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
+                userNotExist(chatEnterDto.getRoomId());
             } else if (e.getCustomError() == CustomError.CHATROOM_USER_ALREADY_JOINED) {
-                blockSameUser(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
+                blockSameUser(chatEnterDto.getRoomId());
             }
         }
     }
@@ -146,19 +141,19 @@ public class ChatController {
         log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
     }
 
-    private void blockSameUser(Long roomId, Long userId) {
-        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId, userId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
-        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", StompConstants.getRoomEnterDestination(roomId, userId));
+    private void blockSameUser(Long roomId) {
+        template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_USER_ALREADY_JOINED));
+        log.info("get the Destination of CHATROOM USER ALREADY JOINED ERROR :: {}", StompConstants.getOnlyRoomEnterDestination(roomId));
     }
 
-    private void chatroomNotExist(Long roomId, Long userId) {
-        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId, userId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
-        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId, userId));
+    private void chatroomNotExist(Long roomId) {
+        template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.CHATROOM_DOES_NOT_EXIST));
+        log.info("get the Destination of CHATROOM NOT EXIST ERROR :: {}", StompConstants.getOnlyRoomEnterDestination(roomId));
     }
 
-    private void userNotExist(Long roomId, Long userId) {
-        template.convertAndSend(StompConstants.getRoomEnterDestination(roomId, userId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
-        log.info("get the Destination of USER NOT EXIST ERROR :: {}", StompConstants.getRoomEnterDestination(roomId, userId));
+    private void userNotExist(Long roomId) {
+        template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(roomId), ErrorDto.createErrorDto(CustomError.USER_DOES_NOT_EXIST));
+        log.info("get the Destination of USER NOT EXIST ERROR :: {}", StompConstants.getOnlyRoomEnterDestination(roomId));
     }
 
     private void keywordNotMatch(Long roomId, Long userId) {

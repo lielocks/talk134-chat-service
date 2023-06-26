@@ -252,7 +252,7 @@ public class RedisService {
     }
 
     /**
-     * TODO //expire timeOut -> 대화 마감 알림 소켓에서 status 퇴장으로 set한 시간 - 대화방 입장한 시간
+     * expire CHATROOM timeout -> 대화 마감 timeout scheduler 에서 set 해줌
      */
     public void pushUserChatRoom(long userId, long roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;

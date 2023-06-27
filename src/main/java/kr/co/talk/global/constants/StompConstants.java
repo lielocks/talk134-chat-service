@@ -16,10 +16,6 @@ public class StompConstants {
         return CHAT_ROOM_EMOTICON_DESTINATION + roomId;
     }
 
-    public static String getRoomEnterDestination(long roomId, long userId) {
-        return CHAT_ROOM_ENTER_DESTINATION + roomId + "/" + userId;
-    }
-
     public static String getOnlyRoomEnterDestination(long roomId) {
         return CHAT_ROOM_ENTER_DESTINATION + roomId;
     }

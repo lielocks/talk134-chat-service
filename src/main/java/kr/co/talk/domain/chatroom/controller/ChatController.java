@@ -23,6 +23,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import java.util.Optional;
+
 @RestController
 @Slf4j
 @RequiredArgsConstructor
@@ -30,39 +32,6 @@ public class ChatController {
     private final ChatService chatService;
     private final KeywordService keywordService;
     private final SimpMessagingTemplate template;
-
-    /**
-     * type RE_ENTER, NEW_CHATROOM 까지 완료된 MessageMapping
-     * @param chatEnterDto
-     * @param headerAccessor
-     */
-//    @MessageMapping("/enter")
-//    public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
-//        try {
-//            if (!chatService.userEnteredStatus(chatEnterDto.getUserId(), chatEnterDto.getRoomId())) {
-//                ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
-//                log.info("responseDto :: {}", responseDto);
-//                template.convertAndSend(StompConstants.getRoomEnterDestination(chatEnterDto.getRoomId(), chatEnterDto.getUserId()), responseDto);
-//            } else {
-//                ChatEnterResponseDto oneResponseDto = chatService.getOneResponseDto(chatEnterDto);
-//                log.info("oneResponseDto :: {}", oneResponseDto);
-//                template.convertAndSend(StompConstants.getPrivateChannelDestination(chatEnterDto.getUserId()), oneResponseDto);
-//            }
-//
-//            headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
-//            headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
-//            log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
-//        }
-//        catch (CustomException e) {
-//            if (e.getCustomError() == CustomError.CHATROOM_DOES_NOT_EXIST) {
-//                chatroomNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
-//            } else if (e.getCustomError() == CustomError.USER_DOES_NOT_EXIST) {
-//                userNotExist(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
-//            } else if (e.getCustomError() == CustomError.CHATROOM_USER_ALREADY_JOINED) {
-//                blockSameUser(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
-//            }
-//        }
-//    }
 
     @MessageMapping("/enter")
     public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
@@ -133,10 +102,11 @@ public class ChatController {
         log.info("disconnected event :: {}", event);
         // 어떤 userId, roomId 정보를 가진 session 이 끊겼는지 get message
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-
-        if (headerAccessor.getSessionAttributes().get("userId") != null && headerAccessor.getSessionAttributes().get("roomId") != null) {
-            long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
-            long roomId = (Long) headerAccessor.getSessionAttributes().get("roomId");
+        Optional<Object> userIdOpt = Optional.ofNullable(headerAccessor.getSessionAttributes().get("userId"));
+        Optional<Object> roomIdOpt = Optional.ofNullable(headerAccessor.getSessionAttributes().get("roomId"));
+        if (userIdOpt.isPresent() && roomIdOpt.isPresent()) {
+            long userId = (Long) userIdOpt.get();
+            long roomId = (Long) roomIdOpt.get();
             chatService.disconnectUserSetFalse(userId, roomId);
             log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
         }

@@ -16,13 +16,17 @@ import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.math.RandomUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class QuestionNoticeService {
@@ -34,7 +38,7 @@ public class QuestionNoticeService {
     private final KeywordService keywordService;
 
     @Transactional(readOnly = true)
-    public QuestionNoticeResponseDto getQuestionNotice(long roomId) {
+    public QuestionNoticeResponseDto getQuestionNotice(long roomId, int questionNumber, long senderId) {
         // redis에서 현재 진행상황 있는지 조회
         QuestionNoticeManagementRedisDto dto = redisService.getCurrentQuestionNoticeDto(getQuestionKey(roomId));
 
@@ -48,35 +52,57 @@ public class QuestionNoticeService {
             var userList = userClient.requiredEnterInfo(0, chatroomUsersList.stream()
                     .map(ChatroomUsers::getUserId)
                     .collect(Collectors.toList()));
-            // 순서 랜덤으로 변경
-            Collections.shuffle(userList);
-            dto = QuestionNoticeManagementRedisDto.builder()
-                    .currentSpeakerIndex(0)
-                    .currentQuestionIndex(0)
-                    .speakerQueue(userList)
-                    .build();
-        } else {
-            if (dto.isFinalQuestion()) {
-                if (dto.isFinalSpeaker()) {
-                    throw new CustomException(CustomError.ALREADY_FINISHED);
+
+            List<QuestionNoticeManagementRedisDto.QuestionUserMap> tempUserMaps = new ArrayList<>();
+
+            userList.forEach(enterInfo -> {
+                List<Long> questionCodes = redisService.findQuestionCode(roomId, enterInfo.getUserId());
+                questionCodes.forEach(code -> tempUserMaps.add(QuestionNoticeManagementRedisDto.QuestionUserMap.builder()
+                        .userId(enterInfo.getUserId())
+                        .questionCode(code)
+                        .build()));
+            });
+
+            List<QuestionNoticeManagementRedisDto.QuestionUserMap> finalUserMaps = new ArrayList<>();
+
+            // 랜덤하게 섞는 로직
+            do {
+                int randomIndex = RandomUtils.nextInt(tempUserMaps.size());
+                var randomPickedObject = tempUserMaps.get(randomIndex);
+                // 랜덤하게 뽑은 질문의 유저가 방금 추가한 유저와 같을 때는 skip. 다시.
+                if (!finalUserMaps.isEmpty()
+                        && finalUserMaps.get(finalUserMaps.size() - 1).getUserId() == randomPickedObject.getUserId()) {
+                    continue;
                 }
-                dto.incrementCurrentSpeakerIndex();
-                dto.resetQuestionIndex();
-            } else {
-                dto.incrementCurrentQuestionIndex();
-            }
+                finalUserMaps.add(randomPickedObject);
+                tempUserMaps.remove(randomPickedObject);
+            } while (!CollectionUtils.isEmpty(tempUserMaps));
+
+            dto = QuestionNoticeManagementRedisDto.builder()
+                    .userList(userList)
+                    .questionList(finalUserMaps)
+                    .build();
+            saveCurrentQuestionStatus(roomId, dto);
         }
 
-        saveCurrentQuestionStatus(roomId, dto);
+        int questionIndex = questionNumber - 1;
 
-        var speaker = dto.getSpeakerQueue().get(dto.getCurrentSpeakerIndex());
-        List<Long> questionCodes = redisService.findQuestionCode(roomId, speaker.getUserId());
-        Question currentQuestion = questionRepository.findById(questionCodes.get(dto.getCurrentQuestionIndex()))
+        var currentUserId = dto.getQuestionList().get(questionIndex).getUserId();
+        var speaker = dto.getUserList().stream()
+                .filter(enterInfo -> enterInfo.getUserId() == currentUserId)
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.error("Redis data validation error.\n" +
+                            "Current User Id: {}\n", currentUserId);
+                    return new CustomException(CustomError.SERVER_ERROR);
+                });
+
+        Question currentQuestion = questionRepository.findById(dto.getQuestionList().get(questionIndex).getQuestionCode())
                 .orElseThrow(CustomException::new);
 
         return QuestionNoticeResponseDto.builder()
                 .speaker(speaker)
-                .userList(dto.getSpeakerQueue())
+                .userList(dto.getUserList())
                 .topic(Topic.builder()
                         .keyword(currentQuestion.getKeyword().getName())
                         .questionCode(currentQuestion.getQuestionId())
@@ -84,8 +110,11 @@ public class QuestionNoticeService {
                         .depth(keywordService.convertIdIntoDepth(currentQuestion.getQuestionId()))
                         .questionGuide(currentQuestion.getGuideList())
                         .build())
-                .questionCount(dto.getCurrentQuestionIndex() + 1)
-                .endFlag(dto.isFinalSpeaker() && dto.isFinalQuestion())
+                .metadata(QuestionNoticeResponseDto.QuestionNoticeMetadata.builder()
+                        .senderId(senderId)
+                        .questionNumber(questionNumber)
+                        .finalQuestionNumber(dto.getQuestionList().size())
+                        .build())
                 .build();
     }
 

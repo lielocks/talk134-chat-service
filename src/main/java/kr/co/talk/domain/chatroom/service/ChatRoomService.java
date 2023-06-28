@@ -1,6 +1,7 @@
 package kr.co.talk.domain.chatroom.service;
 
 import kr.co.talk.domain.chatroom.dto.*;
+import kr.co.talk.domain.chatroom.dto.FeedbackDto.Feedback;
 import kr.co.talk.domain.chatroom.dto.RequestDto.*;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
@@ -157,7 +158,10 @@ public class ChatRoomService {
 	 * @param feedbackDto
 	 */
 	public void saveFeedbackOptionalToRedis(FeedbackDto feedbackDto) {
-		redisService.pushMap(RedisConstants.FEEDBACK_ + feedbackDto.getRoomId(),
+	    List<Feedback> optionalFeedbackList = feedbackDto.getFeedback().stream().filter(feedback->feedback.getToUserId() != 0).collect(Collectors.toList());
+	    feedbackDto.setFeedback(optionalFeedbackList);
+	    
+	    redisService.pushMap(RedisConstants.FEEDBACK_ + feedbackDto.getRoomId(),
 				String.valueOf(feedbackDto.getUserId()), feedbackDto);
 	}
 
@@ -187,6 +191,10 @@ public class ChatRoomService {
 				.build();
 
 		userClient.changeStatus(userId, updateRequestStatusDto);
+		
+		// 채팅방 종료 후 채팅방 remove
+		Optional<Chatroom> chatroom = chatroomRepository.findById(feedback.getRoomId());
+		chatroom.ifPresent(c -> chatroomRepository.delete(c));
 		
 		// kafka를 통해 채팅방 종료 이벤트 메세지 보냄
 		chatRoomSender.sendEndChatting(feedback.getRoomId(), userId);

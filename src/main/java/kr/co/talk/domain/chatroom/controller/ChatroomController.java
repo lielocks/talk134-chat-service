@@ -115,29 +115,5 @@ public class ChatroomController {
 	public ResponseEntity<?> findFeedback(@RequestHeader(value = "userId") Long userId) {
 		return ResponseEntity.ok(userClient.getUserStaus(userId));
 	}
-	
-	@GetMapping("/emo")
-	public void testEmo(@RequestHeader(value = "userId") Long userId, int code, long from, long to) {
-	    EmoticonCode emoticonCode = EmoticonCode.of(code);
-        RoomEmoticon value = RoomEmoticon.builder()
-                .emoticonCode(emoticonCode)
-                .fromUserId(from)
-                .toUserId(to)
-                .roomId(48)
-                .build();
-
-        redisService.pushList(getRoomEmoticonRedisKey(48L), value);
-        
-        KeywordSetDto keywordSetDto = KeywordSetDto.builder()
-                .roomId(48L)
-                .keywordCode(Arrays.asList(45L, 46L, 57L))
-                .questionCode(Arrays.asList(1L, 1L, 2L))
-                .build();
-        redisService.pushQuestionList(48, userId, keywordSetDto);
-	}
-	
-	private String getRoomEmoticonRedisKey(Long roomId) {
-        return String.format("%s%s", roomId, RedisConstants.ROOM_EMOTICON);
-    }
 
 }

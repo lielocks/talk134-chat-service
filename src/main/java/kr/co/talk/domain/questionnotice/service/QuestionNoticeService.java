@@ -37,6 +37,7 @@ public class QuestionNoticeService {
     private final UserClient userClient;
     private final QuestionRepository questionRepository;
     private final KeywordService keywordService;
+    private final QuestionNoticeRedisService questionNoticeRedisService;
 
     @Transactional(readOnly = true)
     public QuestionNoticeResponseDto getQuestionNotice(final long roomId, final int questionNumber, final long senderId) {
@@ -84,6 +85,11 @@ public class QuestionNoticeService {
                     .questionList(finalUserMaps)
                     .build();
             saveCurrentQuestionStatus(roomId, dto);
+        }
+
+        // 들어온 questionNumber가 기존값이랑 다를 때 새로 저장
+        if (questionNoticeRedisService.getCurrentQuestionNumber(roomId) != questionNumber) {
+            questionNoticeRedisService.saveCurrentQuestionNumber(roomId, questionNumber);
         }
 
         int questionIndex = questionNumber - 1;

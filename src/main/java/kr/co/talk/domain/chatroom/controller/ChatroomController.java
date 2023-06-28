@@ -57,8 +57,8 @@ public class ChatroomController {
 	 * @return
 	 */
 	@GetMapping("/find-chatrooms-with-name")
-	public ResponseEntity<?> findChatRoomsWithName(@RequestHeader(value = "userId") Long userId, String name) {
-		return ResponseEntity.ok(chatRoomService.findChatRoomsByName(userId, name));
+	public ResponseEntity<?> findChatRoomsWithName(@RequestHeader(value = "userId") Long userId, String searchName) {
+		return ResponseEntity.ok(chatRoomService.findChatRoomsByName(userId, searchName));
 	}
 
 	@GetMapping("/find-users/chatroom/{roomId}")

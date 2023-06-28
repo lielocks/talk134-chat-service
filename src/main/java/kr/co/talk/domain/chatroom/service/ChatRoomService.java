@@ -46,9 +46,9 @@ public class ChatRoomService {
 	 * @param name
 	 * @return
 	 */
-	public List<ChatroomListDto> findChatRoomsByName(long userId, String name) {
+	public List<ChatroomListDto> findChatRoomsByName(long userId, String searchName) {
 		FindChatroomResponseDto findChatroomInfo = userClient.findChatroomInfo(userId);
-		List<UserIdResponseDto> userIdResponseDtos = userClient.getUserIdByName(findChatroomInfo.getTeamCode(), name);
+		List<UserIdResponseDto> userIdResponseDtos = userClient.getUserIdByName(findChatroomInfo.getTeamCode(), searchName);
 		List<Long> findUserIds = userIdResponseDtos.stream().map(dto -> dto.getUserId()).collect(Collectors.toList());
 		List<Chatroom> chatroomEntity = chatroomRepository.findByTeamCodeAndName(findChatroomInfo.getTeamCode(),
 				findUserIds);

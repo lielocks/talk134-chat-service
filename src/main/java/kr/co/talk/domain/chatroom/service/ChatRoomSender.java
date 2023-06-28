@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatRoomSender {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    // private final ChatRedisService chatRedisService;
 
     public void sendEndChatting(long roomId, long userId) {
         KafkaEndChatroomDTO chatroomDTO = KafkaEndChatroomDTO.builder()

@@ -1,9 +1,7 @@
 package kr.co.talk.domain.chatroom.controller;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,13 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import kr.co.talk.domain.chatroom.dto.FeedbackDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto;
-import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
-import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
-import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
-import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.service.ChatRoomService;
-import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.global.client.UserClient;
 import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.service.redis.RedisService;
@@ -115,29 +107,5 @@ public class ChatroomController {
 	public ResponseEntity<?> findFeedback(@RequestHeader(value = "userId") Long userId) {
 		return ResponseEntity.ok(userClient.getUserStaus(userId));
 	}
-	
-	@GetMapping("/emo")
-	public void testEmo(@RequestHeader(value = "userId") Long userId, int code, long from, long to) {
-	    EmoticonCode emoticonCode = EmoticonCode.of(code);
-        RoomEmoticon value = RoomEmoticon.builder()
-                .emoticonCode(emoticonCode)
-                .fromUserId(from)
-                .toUserId(to)
-                .roomId(48)
-                .build();
-
-        redisService.pushList(getRoomEmoticonRedisKey(48L), value);
-        
-        KeywordSetDto keywordSetDto = KeywordSetDto.builder()
-                .roomId(48L)
-                .keywordCode(Arrays.asList(45L, 46L, 57L))
-                .questionCode(Arrays.asList(1L, 1L, 2L))
-                .build();
-        redisService.pushQuestionList(48, userId, keywordSetDto);
-	}
-	
-	private String getRoomEmoticonRedisKey(Long roomId) {
-        return String.format("%s%s", roomId, RedisConstants.ROOM_EMOTICON);
-    }
 
 }

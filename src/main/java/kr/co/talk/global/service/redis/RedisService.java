@@ -1,31 +1,25 @@
 package kr.co.talk.global.service.redis;
 
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.domain.chatroomusers.dto.TopicListRedisDto;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
+import kr.co.talk.domain.questionnotice.dto.QuestionNoticeManagementRedisDto;
+import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
-import kr.co.talk.domain.questionnotice.dto.QuestionNoticeManagementRedisDto;
-import kr.co.talk.global.constants.RedisConstants;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.PostConstruct;
+import java.time.Duration;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -317,10 +311,10 @@ public class RedisService {
     }
 
     // 질문 알림 조회용
-    public void saveObject(String key, Object value) {
+    public void saveObject(String key, Object value, Duration duration) {
         try {
             String item = objectMapper.writeValueAsString(value);
-            valueOps.set(key, item);
+            valueOps.set(key, item, duration);
         } catch (JsonProcessingException e) {
             log.error("json parse exception , key is :: {}, value is :: {}", key, value, e);
             throw new RuntimeException(e);

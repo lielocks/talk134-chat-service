@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -123,6 +124,6 @@ public class QuestionNoticeService {
     }
 
     private void saveCurrentQuestionStatus(long roomId, QuestionNoticeManagementRedisDto dto) {
-        redisService.saveObject(getQuestionKey(roomId), dto);
+        redisService.saveObject(getQuestionKey(roomId), dto, Duration.ofDays(1));
     }
 }

@@ -9,11 +9,18 @@ import java.util.List;
 @Builder
 @Data
 public class QuestionNoticeResponseDto {
+    private QuestionNoticeMetadata metadata;
     private RequestDto.ChatRoomEnterResponseDto speaker;
     private List<RequestDto.ChatRoomEnterResponseDto> userList;
     private Topic topic;
-    private int questionCount;
-    private boolean endFlag;
+
+    @Builder
+    @Data
+    public static class QuestionNoticeMetadata {
+        private long senderId;
+        private int questionNumber;
+        private int finalQuestionNumber;
+    }
 
     @Builder
     @Data

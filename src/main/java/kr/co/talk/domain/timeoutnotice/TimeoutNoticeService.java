@@ -23,7 +23,6 @@ public class TimeoutNoticeService {
 
     private void sendTimeoutMessage(long roomId, boolean fiveMinute) {
         TimeoutNoticeDto dto = TimeoutNoticeDto.builder()
-                .roomId(roomId)
                 .fiveMinuteLeft(fiveMinute)
                 .build();
         messagingTemplate.convertAndSend(StompConstants.generateTimeoutSubUrl(roomId), dto);

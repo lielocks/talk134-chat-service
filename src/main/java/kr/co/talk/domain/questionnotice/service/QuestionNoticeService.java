@@ -39,7 +39,7 @@ public class QuestionNoticeService {
     private final KeywordService keywordService;
 
     @Transactional(readOnly = true)
-    public QuestionNoticeResponseDto getQuestionNotice(long roomId, int questionNumber, long senderId) {
+    public QuestionNoticeResponseDto getQuestionNotice(final long roomId, final int questionNumber, final long senderId) {
         // redis에서 현재 진행상황 있는지 조회
         QuestionNoticeManagementRedisDto dto = redisService.getCurrentQuestionNoticeDto(getQuestionKey(roomId));
 

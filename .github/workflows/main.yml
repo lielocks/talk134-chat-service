@@ -43,4 +43,5 @@ jobs:
         source: "./build/libs/*.jar"
         target: ${{ env.SERVICE_HOME }}
         strip_components: 2
-    - run: ${{ env.SERVICE_HOME }}/${{ env.SCRIPT }}
+    - run: sh /home/ec2-user/deploy/chat-deploy.sh
+

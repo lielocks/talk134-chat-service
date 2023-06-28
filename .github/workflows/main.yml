@@ -43,12 +43,4 @@ jobs:
         source: "./build/libs/*.jar"
         target: ${{ env.SERVICE_HOME }}
         strip_components: 2
-    - name: Execute Script
-      uses: appleboy/ssh-action@master
-      with:
-        username: ${{ secrets.EC2_USERNAME }}
-        host: ${{ env.EC2_HOST }}
-        port: ${{ secrets.SSH_PORT }}
-        key: ${{ secrets.PRIVATE_KEY }}
-        script_stop: true
-        script: chmod 744 ${{ env.SERVICE_HOME }}/${{ env.SCRIPT }} && ${{ env.SERVICE_HOME }}/${{ env.SCRIPT }}
+    - run: ${{ env.SERVICE_HOME }}/${{ env.SCRIPT }}

@@ -48,6 +48,7 @@ jobs:
       with:
         username: ${{ secrets.EC2_USERNAME }}
         host: ${{ env.EC2_HOST }}
+        port: ${{ secrets.SSH_PORT }}
         key: ${{ secrets.PRIVATE_KEY }}
         script_stop: true
         script: chmod 744 ${{ env.SERVICE_HOME }}/${{ env.SCRIPT }} && ${{ env.SERVICE_HOME }}/${{ env.SCRIPT }}

@@ -199,9 +199,11 @@ public class ChatRoomService {
 		
 		// 채팅방 종료 후 채팅방 remove
 		Optional<Chatroom> chatroom = chatroomRepository.findById(feedback.getRoomId());
+		// 질문 알림 조회용으로 redis에 저장했던 데이터도 삭제.
 		chatroom.ifPresent(c -> {
 			chatroomRepository.delete(c);
 			questionNoticeRedisService.deleteQuestionNumber(c.getChatroomId());
+			questionNoticeRedisService.deleteQuestionManagementDto(c.getChatroomId());
 		});
 		
 		// kafka를 통해 채팅방 종료 이벤트 메세지 보냄

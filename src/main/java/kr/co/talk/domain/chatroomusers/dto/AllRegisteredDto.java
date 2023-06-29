@@ -11,4 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AllRegisteredDto {
     private boolean allRegistered;
+    private int questionNumber;
 }

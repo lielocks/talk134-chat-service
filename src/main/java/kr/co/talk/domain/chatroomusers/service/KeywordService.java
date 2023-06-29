@@ -1,8 +1,6 @@
 package kr.co.talk.domain.chatroomusers.service;
 
 import kr.co.talk.domain.chatroom.dto.SocketFlagResponseDto;
-import kr.co.talk.domain.chatroom.model.Chatroom;
-import kr.co.talk.domain.chatroom.repository.ChatroomRepository;
 import kr.co.talk.domain.chatroomusers.dto.*;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.domain.chatroomusers.entity.Keyword;
@@ -10,6 +8,7 @@ import kr.co.talk.domain.chatroomusers.entity.Question;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.domain.chatroomusers.repository.KeywordRepository;
 import kr.co.talk.domain.chatroomusers.repository.QuestionRepository;
+import kr.co.talk.domain.questionnotice.service.QuestionNoticeRedisService;
 import kr.co.talk.global.client.UserClient;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
@@ -17,7 +16,6 @@ import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +28,7 @@ public class KeywordService {
     private final KeywordRepository keywordRepository;
     private final QuestionRepository questionRepository;
     private final ChatroomUsersRepository usersRepository;
+    private final QuestionNoticeRedisService questionNoticeRedisService;
     private final RedisService redisService;
     private final UserClient userClient;
 
@@ -134,7 +133,7 @@ public class KeywordService {
             }
             usersRepository.saveAll(users);
         }
-        return AllRegisteredDto.builder().allRegistered(registered).build();
+        return AllRegisteredDto.builder().allRegistered(registered).questionNumber(questionNoticeRedisService.getCurrentQuestionNumber(listDto.getRoomId())).build();
     }
 
     public Integer setUserStatusMap(long userId) {

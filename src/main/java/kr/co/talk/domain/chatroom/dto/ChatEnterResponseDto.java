@@ -18,7 +18,7 @@ public class ChatEnterResponseDto extends SocketResponseDto{
      public static class ChatroomUserInfo {
           private Long userId;
           private String nickname;
-          private String userName;
+          private String name;
           private String profileUrl;
           private boolean activeFlag;
           private int socketFlag;

@@ -32,7 +32,7 @@ public class FeedbackDto implements Serializable {
 	@Data
 	@NoArgsConstructor
 	@AllArgsConstructor(access = AccessLevel.PROTECTED)
-	private static class Feedback implements Serializable {
+	public static class Feedback implements Serializable {
 		private static final long serialVersionUID = 1L;
 		
 		private long toUserId;

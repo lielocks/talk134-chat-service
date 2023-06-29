@@ -92,6 +92,7 @@ public class QuestionNoticeService {
             questionNoticeRedisService.saveCurrentQuestionNumber(roomId, questionNumber);
         }
 
+        // questionNumber는 1부터 시작이라 0-based index를 위해 1 빼줌
         int questionIndex = questionNumber - 1;
 
         var currentUserId = dto.getQuestionList().get(questionIndex).getUserId();

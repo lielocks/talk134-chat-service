@@ -24,6 +24,11 @@ public class QuestionNoticeRedisService {
         stringRedisTemplate.opsForValue().set(getQuestionNumberKey(roomId), String.valueOf(questionNumber));
     }
 
+    /**
+     * 현재 저장된 questionNumber를 리턴
+     * @param roomId room id
+     * @return 이 채팅방의 현재 questionNumber. 없으면 1로 세팅 후 1을 리턴.
+     */
     public int getCurrentQuestionNumber(long roomId) {
         if (!hasKey(roomId)) {
             saveCurrentQuestionNumber(roomId, 1);

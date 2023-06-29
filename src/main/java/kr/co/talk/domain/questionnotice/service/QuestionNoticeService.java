@@ -11,7 +11,6 @@ import kr.co.talk.domain.questionnotice.dto.QuestionNoticeManagementRedisDto;
 import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto;
 import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto.Topic;
 import kr.co.talk.global.client.UserClient;
-import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,11 +35,12 @@ public class QuestionNoticeService {
     private final UserClient userClient;
     private final QuestionRepository questionRepository;
     private final KeywordService keywordService;
+    private final QuestionNoticeRedisService questionNoticeRedisService;
 
     @Transactional(readOnly = true)
-    public QuestionNoticeResponseDto getQuestionNotice(long roomId, int questionNumber, long senderId) {
+    public QuestionNoticeResponseDto getQuestionNotice(final long roomId, final int questionNumber, final long senderId) {
         // redis에서 현재 진행상황 있는지 조회
-        QuestionNoticeManagementRedisDto dto = redisService.getCurrentQuestionNoticeDto(getQuestionKey(roomId));
+        QuestionNoticeManagementRedisDto dto = questionNoticeRedisService.getCurrentQuestionNoticeDto(roomId);
 
         // 없으면 새로 만들기
         if (dto == null) {
@@ -83,9 +82,15 @@ public class QuestionNoticeService {
                     .userList(userList)
                     .questionList(finalUserMaps)
                     .build();
-            saveCurrentQuestionStatus(roomId, dto);
+            questionNoticeRedisService.saveCurrentQuestionStatus(roomId, dto);
         }
 
+        // 들어온 questionNumber가 기존값이랑 다를 때 새로 저장
+        if (questionNoticeRedisService.getCurrentQuestionNumber(roomId) != questionNumber) {
+            questionNoticeRedisService.saveCurrentQuestionNumber(roomId, questionNumber);
+        }
+
+        // questionNumber는 1부터 시작이라 0-based index를 위해 1 빼줌
         int questionIndex = questionNumber - 1;
 
         var currentUserId = dto.getQuestionList().get(questionIndex).getUserId();
@@ -119,11 +124,4 @@ public class QuestionNoticeService {
                 .build();
     }
 
-    private String getQuestionKey(long roomId) {
-        return String.format("%s_%s", roomId, RedisConstants.QUESTION_NOTICE);
-    }
-
-    private void saveCurrentQuestionStatus(long roomId, QuestionNoticeManagementRedisDto dto) {
-        redisService.saveObject(getQuestionKey(roomId), dto, Duration.ofDays(1));
-    }
 }

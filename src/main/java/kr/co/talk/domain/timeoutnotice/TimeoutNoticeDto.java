@@ -6,6 +6,5 @@ import lombok.Data;
 @Builder
 @Data
 public class TimeoutNoticeDto {
-    private long roomId;
     private boolean fiveMinuteLeft;
 }

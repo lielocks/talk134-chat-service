@@ -7,7 +7,6 @@ import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.domain.chatroomusers.dto.QuestionCodeDto;
 import kr.co.talk.domain.chatroomusers.dto.TopicListRedisDto;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
-import kr.co.talk.domain.questionnotice.dto.QuestionNoticeManagementRedisDto;
 import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
@@ -307,29 +306,6 @@ public class RedisService {
             return listRedisDto;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    // 질문 알림 조회용
-    public void saveObject(String key, Object value, Duration duration) {
-        try {
-            String item = objectMapper.writeValueAsString(value);
-            valueOps.set(key, item, duration);
-        } catch (JsonProcessingException e) {
-            log.error("json parse exception , key is :: {}, value is :: {}", key, value, e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public QuestionNoticeManagementRedisDto getCurrentQuestionNoticeDto(String key) {
-        String value = valueOps.get(key);
-        if (value == null) {
-            return null;
-        }
-        try {
-            return objectMapper.readValue(value, QuestionNoticeManagementRedisDto.class);
-        } catch (JsonProcessingException e) {
-            return null;
         }
     }
 

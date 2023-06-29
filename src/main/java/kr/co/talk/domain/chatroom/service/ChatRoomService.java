@@ -90,7 +90,7 @@ public class ChatRoomService {
 			List<ChatroomListDto.Emoticons> emoticons = sizeByCode.entrySet().stream()
 					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).limit(3).map(entry -> {
 						return ChatroomListDto.Emoticons.builder()
-								.emoticonCode(entry.getKey())
+								.emoticon(entry.getKey())
 								.emoticonCount(entry.getValue())
 								.build();
 					}).collect(Collectors.toList());
@@ -103,7 +103,7 @@ public class ChatRoomService {
 					.roomName(chatroom.getName())
 					.emoticons(emoticons)
 					.chatroomUsers(chatroomUsers)
-					.userCount(chatroomUsers.size())
+//					.userCount(chatroomUsers.size())
 					.joinFlag(optJoinUser.isPresent())
 					.build();
 		}).collect(Collectors.toList());

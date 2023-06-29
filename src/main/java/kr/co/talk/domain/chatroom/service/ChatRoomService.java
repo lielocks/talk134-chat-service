@@ -1,6 +1,7 @@
 package kr.co.talk.domain.chatroom.service;
 
 import kr.co.talk.domain.chatroom.dto.*;
+import kr.co.talk.domain.chatroom.dto.FeedbackDto.Feedback;
 import kr.co.talk.domain.chatroom.dto.RequestDto.*;
 import kr.co.talk.domain.chatroom.model.Chatroom;
 import kr.co.talk.domain.chatroom.model.EmoticonCode;
@@ -45,9 +46,9 @@ public class ChatRoomService {
 	 * @param name
 	 * @return
 	 */
-	public List<ChatroomListDto> findChatRoomsByName(long userId, String name) {
+	public List<ChatroomListDto> findChatRoomsByName(long userId, String searchName) {
 		FindChatroomResponseDto findChatroomInfo = userClient.findChatroomInfo(userId);
-		List<UserIdResponseDto> userIdResponseDtos = userClient.getUserIdByName(findChatroomInfo.getTeamCode(), name);
+		List<UserIdResponseDto> userIdResponseDtos = userClient.getUserIdByName(findChatroomInfo.getTeamCode(), searchName);
 		List<Long> findUserIds = userIdResponseDtos.stream().map(dto -> dto.getUserId()).collect(Collectors.toList());
 		List<Chatroom> chatroomEntity = chatroomRepository.findByTeamCodeAndName(findChatroomInfo.getTeamCode(),
 				findUserIds);
@@ -89,7 +90,7 @@ public class ChatRoomService {
 			List<ChatroomListDto.Emoticons> emoticons = sizeByCode.entrySet().stream()
 					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).limit(3).map(entry -> {
 						return ChatroomListDto.Emoticons.builder()
-								.emoticonCode(entry.getKey())
+								.emoticon(entry.getKey())
 								.emoticonCount(entry.getValue())
 								.build();
 					}).collect(Collectors.toList());
@@ -102,7 +103,7 @@ public class ChatRoomService {
 					.roomName(chatroom.getName())
 					.emoticons(emoticons)
 					.chatroomUsers(chatroomUsers)
-					.userCount(chatroomUsers.size())
+//					.userCount(chatroomUsers.size())
 					.joinFlag(optJoinUser.isPresent())
 					.build();
 		}).collect(Collectors.toList());
@@ -157,7 +158,10 @@ public class ChatRoomService {
 	 * @param feedbackDto
 	 */
 	public void saveFeedbackOptionalToRedis(FeedbackDto feedbackDto) {
-		redisService.pushMap(RedisConstants.FEEDBACK_ + feedbackDto.getRoomId(),
+	    List<Feedback> optionalFeedbackList = feedbackDto.getFeedback().stream().filter(feedback->feedback.getToUserId() != 0).collect(Collectors.toList());
+	    feedbackDto.setFeedback(optionalFeedbackList);
+	    
+	    redisService.pushMap(RedisConstants.FEEDBACK_ + feedbackDto.getRoomId(),
 				String.valueOf(feedbackDto.getUserId()), feedbackDto);
 	}
 
@@ -187,6 +191,10 @@ public class ChatRoomService {
 				.build();
 
 		userClient.changeStatus(userId, updateRequestStatusDto);
+		
+		// 채팅방 종료 후 채팅방 remove
+		Optional<Chatroom> chatroom = chatroomRepository.findById(feedback.getRoomId());
+		chatroom.ifPresent(c -> chatroomRepository.delete(c));
 		
 		// kafka를 통해 채팅방 종료 이벤트 메세지 보냄
 		chatRoomSender.sendEndChatting(feedback.getRoomId(), userId);

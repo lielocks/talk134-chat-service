@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 public class ChatroomListDto {
 	private long roomId;
 	private String roomName;
-	private int userCount;
+//	private int userCount;
 	private List<Emoticons> emoticons = new ArrayList<>();
 	@JsonIgnore
 	private List<ChatroomUsers> chatroomUsers = new ArrayList<>();
@@ -33,7 +33,7 @@ public class ChatroomListDto {
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	@Builder
 	public static class Emoticons{
-		  private EmoticonCode emoticonCode;
+		  private EmoticonCode emoticon;
 		    private int emoticonCount;
 	}
 }

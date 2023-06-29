@@ -1,7 +1,9 @@
 package kr.co.talk.domain.chatroom.controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,7 +13,13 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import kr.co.talk.domain.chatroom.dto.FeedbackDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto;
+import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
+import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
+import kr.co.talk.domain.chatroom.dto.RequestDto.UserIdResponseDto;
+import kr.co.talk.domain.chatroom.model.EmoticonCode;
 import kr.co.talk.domain.chatroom.service.ChatRoomService;
+import kr.co.talk.domain.chatroomusers.dto.KeywordSetDto;
 import kr.co.talk.global.client.UserClient;
 import kr.co.talk.global.constants.RedisConstants;
 import kr.co.talk.global.service.redis.RedisService;
@@ -49,8 +57,8 @@ public class ChatroomController {
 	 * @return
 	 */
 	@GetMapping("/find-chatrooms-with-name")
-	public ResponseEntity<?> findChatRoomsWithName(@RequestHeader(value = "userId") Long userId, String name) {
-		return ResponseEntity.ok(chatRoomService.findChatRoomsByName(userId, name));
+	public ResponseEntity<?> findChatRoomsWithName(@RequestHeader(value = "userId") Long userId, String searchName) {
+		return ResponseEntity.ok(chatRoomService.findChatRoomsByName(userId, searchName));
 	}
 
 	@GetMapping("/find-users/chatroom/{roomId}")

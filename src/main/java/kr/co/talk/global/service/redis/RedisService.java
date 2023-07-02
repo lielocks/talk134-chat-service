@@ -249,6 +249,16 @@ public class RedisService {
         redisTemplate.exec();
     }
 
+    public void chatRoomCreateTime(long roomId) {
+        String timeKey = roomId + RedisConstants.TIME;
+        valueOps.setIfAbsent(timeKey, String.valueOf(System.currentTimeMillis()));
+    }
+
+    public boolean findChatRoomTime(long roomId) {
+        String timeKey = roomId + RedisConstants.TIME;
+        return stringRedisTemplate.hasKey(timeKey);
+    }
+
     public boolean isWithin24Hours(long roomId, long userId) {
         String timeKey = userId + "_" + roomId + RedisConstants.TIME;
         String timeValueStr = getValues(timeKey);
@@ -289,7 +299,7 @@ public class RedisService {
             long storedTimeSeconds = earliestTimeValue / 1000; // room 생성된 시간
             long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
             long timeDifference = currentTime - storedTimeSeconds;
-            long tenMinutesInSeconds = 60 * 10;
+            long tenMinutesInSeconds = 60 * 1;
             log.info("timeDifference >= tenMinutesInSeconds :: {}", timeDifference >= tenMinutesInSeconds);
 
             return timeDifference >= tenMinutesInSeconds;
@@ -297,6 +307,34 @@ public class RedisService {
             return false;
         }
     }
+
+    public boolean flagSetWithin10Minutes(List<ChatroomUsers> chatroomUsers) {
+        long earliestTimeValue = Long.MAX_VALUE;
+
+        for (ChatroomUsers user : chatroomUsers) {
+            long roomId = user.getChatroom().getChatroomId();
+            String timeKey = roomId + RedisConstants.TIME;
+            String timeValueStr = getValues(timeKey);
+
+            if (timeValueStr != null && !timeValueStr.isEmpty()) {
+                long timeValue = Long.parseLong(timeValueStr);
+                earliestTimeValue = Math.min(earliestTimeValue, timeValue);
+            }
+        }
+
+        try {
+            long flagSetTimeSeconds = earliestTimeValue / 1000; // chatroom users 중 socketFlag 2로 처음 set 된 시간
+            long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
+            long flagTimeDifference = currentTime - flagSetTimeSeconds;
+            long tenMinutesInSeconds = 60 * 1;
+            log.info("flagTimeDifference >= tenMinutesInSeconds :: {}", flagTimeDifference >= tenMinutesInSeconds);
+
+            return flagTimeDifference >= tenMinutesInSeconds;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
 
     public TopicListRedisDto returnTopicList(long userId, long roomId) {
         String values = getValues(roomId + "_" + userId + RedisConstants.QUESTION);
@@ -313,9 +351,13 @@ public class RedisService {
         String key = "*" + RedisConstants.CHATROOM;
         String countKey = roomId + "_" + "*" + RedisConstants.COUNT;
         String roomCountKey = roomId + RedisConstants.COUNT;
+        String roomTimeKey = roomId + RedisConstants.TIME;
 
-        if (roomCountKey != null) {
+        if (Boolean.TRUE.equals(integerRedisTemplate.hasKey(roomCountKey))) {
             integerRedisTemplate.delete(roomCountKey);
+        }
+        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(roomTimeKey))) {
+            stringRedisTemplate.delete(roomTimeKey);
         }
 
         Set<String> countKeys = integerRedisTemplate.keys(countKey);

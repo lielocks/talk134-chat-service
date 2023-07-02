@@ -41,22 +41,34 @@ public class RedisServiceTest {
 	void syncTest() {
 		ValueOperations<String, String> opsForValue = redisTemplate.opsForValue();
 		String key = "countTest";
-		opsForValue.set(key, "0");
-		
-		for(int i=0;i<1000;i++) {
-			Thread t = new Thread(()->{
-				opsForValue.increment(key);
+		opsForValue.set(key, "1000");
+
+		for (int i = 0; i < 1000; i++) {
+			Thread t = new Thread(() -> {
+				long l = opsForValue.decrement(key);
+				System.out.println("l:::" + l);
 			});
-			
+
 			t.start();
 		}
 
-		System.out.println("opsForValue.get(key):::"+opsForValue.get(key));
-		System.out.println("opsForValue.get(key):::"+opsForValue.get(key));
-		System.out.println("opsForValue.get(key):::"+opsForValue.get(key));
-		assertEquals(opsForValue.get(key), "1000");
+		System.out.println("opsForValue.get(key):::" + opsForValue.get(key));
+		System.out.println("opsForValue.get(key):::" + opsForValue.get(key));
+		System.out.println("opsForValue.get(key):::" + opsForValue.get(key));
+		assertEquals(opsForValue.get(key), "0");
 	}
-	
+
+	@Test
+	void decrementTest() {
+		ValueOperations<String, String> opsForValue = redisTemplate.opsForValue();
+		String key = "countTest2";
+		opsForValue.set(key, "1");
+		
+		Long decrement = opsForValue.decrement(key);
+		
+		System.out.println("decrement:::"+decrement);
+	}
+
 	@Test
 	@DisplayName("Redis set value with timeout test")
 	void setValuesWithTimeoutTest() {
@@ -108,14 +120,15 @@ public class RedisServiceTest {
 
 	@Test
 	@DisplayName("set question Code and keyword Code")
-	void setQuestionCode() throws JsonProcessingException{
+	void setQuestionCode() throws JsonProcessingException {
 		// given
 		long userId = 123L;
 		long roomId = 100L;
 		List<Long> questionCode = Arrays.asList(5L, 10L, 15L);
 		List<Long> keywordCode = Arrays.asList(1L, 2L, 3L);
 		String key = roomId + "_" + userId + RedisConstants.QUESTION;
-		KeywordSetDto keywordSetDto = KeywordSetDto.builder().roomId(roomId).keywordCode(keywordCode).questionCode(questionCode).build();
+		KeywordSetDto keywordSetDto = KeywordSetDto.builder().roomId(roomId).keywordCode(keywordCode)
+				.questionCode(questionCode).build();
 
 		// when
 		redisService.pushQuestionList(roomId, userId, keywordSetDto);
@@ -128,6 +141,5 @@ public class RedisServiceTest {
 
 		redisTemplate.delete(key);
 	}
-
 
 }

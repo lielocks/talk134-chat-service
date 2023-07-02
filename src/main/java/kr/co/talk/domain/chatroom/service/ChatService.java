@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,7 +32,7 @@ public class ChatService {
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
-        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).requestId(chatEnterDto.getUserId()).chatroomUserInfos(getResponseDto(chatEnterDto)).build();
+        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).chatroomUserInfos(getResponseDto(chatEnterDto)).requestId(chatEnterDto.getUserId()).build();
     }
 
     private List<ChatEnterResponseDto.ChatroomUserInfo> getResponseDto(ChatEnterDto chatEnterDto) {
@@ -139,6 +139,7 @@ public class ChatService {
         }
 
         if (socketFlag == 2) {
+            redisService.chatRoomCreateTime(chatEnterDto.getRoomId());
             List<ChatroomUsers> chatroomUsers = getChatroomUsers(chatroom);
             boolean allUsersActive = allChatroomUsersActive(chatroomUsers);
             if (allUsersActive) {
@@ -188,19 +189,29 @@ public class ChatService {
 
     // 대화 참여자가 1/2 이상 참여하기 버튼을 누른 상태 -> 10분 이상이 지나면 set activeFlag true
     private String after10Minutes(ChatEnterDto chatEnterDto) {
-        String verify;
+        String verify = "";
         Chatroom chatroom = chatroomRepository.findChatroomByChatroomId(chatEnterDto.getRoomId());
         List<ChatroomUsers> currentUsers = usersRepository.findChatroomUsersByChatroom(chatroom);
+        Optional<Boolean> socketFlagTwo = currentUsers.stream().map(user -> user.getSocketFlag() == 2).findFirst();
+
         boolean statusGoe = checkTrueStatusGoe(chatroom);
 
-        if (statusGoe && redisService.isWithin10Minutes(currentUsers)) {
+        if (chatEnterDto.getSocketFlag() == 0 && Boolean.FALSE.equals(socketFlagTwo.get()) && statusGoe && redisService.isWithin10Minutes(currentUsers)) {
             setAllChatroomUsersActiveFlag(currentUsers, true);
             verify = "true";
-        } else if (!statusGoe && redisService.isWithin10Minutes(currentUsers)) {
+        } else if (chatEnterDto.getSocketFlag() == 0 && Boolean.FALSE.equals(socketFlagTwo.get()) && !statusGoe && redisService.isWithin10Minutes(currentUsers)) {
+            verify = "stillFalse";
+        } else if (chatEnterDto.getSocketFlag() == 2 && !redisService.findChatRoomTime(chatEnterDto.getRoomId())) {
+            verify = "false";
+        } else if (chatEnterDto.getSocketFlag() == 2 && Boolean.TRUE.equals(socketFlagTwo.get()) && statusGoe && redisService.flagSetWithin10Minutes(currentUsers)) {
+            setAllChatroomUsersActiveFlag(currentUsers, true);
+            verify = "true";
+        } else if (chatEnterDto.getSocketFlag() == 2 && Boolean.TRUE.equals(socketFlagTwo.get()) && !statusGoe && redisService.flagSetWithin10Minutes(currentUsers)) {
             verify = "stillFalse";
         } else {
             verify = "false";
         }
+
         return verify;
     }
 

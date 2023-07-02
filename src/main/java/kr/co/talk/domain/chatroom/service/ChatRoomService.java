@@ -162,12 +162,12 @@ public class ChatRoomService {
 	 * 
 	 * @param feedbackDto
 	 */
-	public void saveFeedbackOptionalToRedis(FeedbackDto feedbackDto) {
+	public void saveFeedbackOptionalToRedis(FeedbackDto feedbackDto, long userId) {
 	    List<Feedback> optionalFeedbackList = feedbackDto.getFeedback().stream().filter(feedback->feedback.getToUserId() != 0).collect(Collectors.toList());
 	    feedbackDto.setFeedback(optionalFeedbackList);
 	    
 	    redisService.pushMap(RedisConstants.FEEDBACK_ + feedbackDto.getRoomId(),
-				String.valueOf(feedbackDto.getUserId()), feedbackDto);
+				String.valueOf(userId), feedbackDto);
 	}
 
 	/**

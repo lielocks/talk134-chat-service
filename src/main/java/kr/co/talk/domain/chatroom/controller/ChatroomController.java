@@ -84,9 +84,9 @@ public class ChatroomController {
 	 * 피드백 선택형 등록 api
 	 */
 	@PostMapping("/create/feedback/optional")
-	public ResponseEntity<?> feedbackCreateOptional(@RequestBody FeedbackDto feedbackDto) {
+	public ResponseEntity<?> feedbackCreateOptional(@RequestHeader(value = "userId") Long userId, @RequestBody FeedbackDto feedbackDto) {
 		log.info("feedbackOptionalDto::::" + feedbackDto);
-		chatRoomService.saveFeedbackOptionalToRedis(feedbackDto);
+		chatRoomService.saveFeedbackOptionalToRedis(feedbackDto, userId);
 		return ResponseEntity.ok().build();
 	}
 
@@ -94,7 +94,7 @@ public class ChatroomController {
 	 * 피드백 필수형 등록 api
 	 */
 	@PostMapping("/create/feedback")
-	public ResponseEntity<?> feedbackCreateOptional(@RequestHeader(value = "userId") Long userId,
+	public ResponseEntity<?> feedbackCreate(@RequestHeader(value = "userId") Long userId,
 			@RequestBody FeedbackDto feedbackDto) {
 		log.info("feedbackOptionalDto::::" + feedbackDto);
 

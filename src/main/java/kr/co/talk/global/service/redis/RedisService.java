@@ -299,7 +299,7 @@ public class RedisService {
             long storedTimeSeconds = earliestTimeValue / 1000; // room 생성된 시간
             long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
             long timeDifference = currentTime - storedTimeSeconds;
-            long tenMinutesInSeconds = 60 * 1;
+            long tenMinutesInSeconds = 60 * 10;
             log.info("timeDifference >= tenMinutesInSeconds :: {}", timeDifference >= tenMinutesInSeconds);
 
             return timeDifference >= tenMinutesInSeconds;
@@ -326,7 +326,7 @@ public class RedisService {
             long flagSetTimeSeconds = earliestTimeValue / 1000; // chatroom users 중 socketFlag 2로 처음 set 된 시간
             long currentTime = System.currentTimeMillis() / 1000; // 현재 시간
             long flagTimeDifference = currentTime - flagSetTimeSeconds;
-            long tenMinutesInSeconds = 60 * 1;
+            long tenMinutesInSeconds = 60 * 10;
             log.info("flagTimeDifference >= tenMinutesInSeconds :: {}", flagTimeDifference >= tenMinutesInSeconds);
 
             return flagTimeDifference >= tenMinutesInSeconds;

@@ -39,7 +39,7 @@ public class ChatroomCustomRepositoryImpl implements ChatroomCustomRepository {
     public List<Long> findByUsersInChatroom(long roomId, long userId) {
         return jpaQueryFactory.select(chatroomUsers.userId)
                 .from(chatroomUsers)
-                .where(chatroomUsers.chatroom.chatroomId.eq(roomId))
+                .where(chatroomUsers.chatroom.chatroomId.eq(roomId).and(chatroomUsers.userId.ne(userId)))
                 .fetch();
     }
 

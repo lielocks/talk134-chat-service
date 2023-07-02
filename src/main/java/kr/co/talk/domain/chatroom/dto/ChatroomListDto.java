@@ -28,12 +28,12 @@ public class ChatroomListDto {
 	@JsonIgnore
 	private List<ChatroomUsers> chatroomUsers = new ArrayList<>();
 	private boolean joinFlag;
-	
+
 	@Data
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	@Builder
-	public static class Emoticons{
-		  private EmoticonCode emoticon;
-		    private int emoticonCount;
+	public static class Emoticons {
+		private String emoticon;
+		private int emoticonCount;
 	}
 }

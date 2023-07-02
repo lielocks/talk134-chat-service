@@ -95,7 +95,7 @@ public class ChatRoomService {
 			List<ChatroomListDto.Emoticons> emoticons = sizeByCode.entrySet().stream()
 					.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).limit(3).map(entry -> {
 						return ChatroomListDto.Emoticons.builder()
-								.emoticon(entry.getKey())
+								.emoticon(entry.getKey().getName())
 								.emoticonCount(entry.getValue())
 								.build();
 					}).collect(Collectors.toList());

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +36,27 @@ public class RedisServiceTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Test
+	@DisplayName("레디스 동시성 test")
+	void syncTest() {
+		ValueOperations<String, String> opsForValue = redisTemplate.opsForValue();
+		String key = "countTest";
+		opsForValue.set(key, "0");
+		
+		for(int i=0;i<1000;i++) {
+			Thread t = new Thread(()->{
+				opsForValue.increment(key);
+			});
+			
+			t.start();
+		}
+
+		System.out.println("opsForValue.get(key):::"+opsForValue.get(key));
+		System.out.println("opsForValue.get(key):::"+opsForValue.get(key));
+		System.out.println("opsForValue.get(key):::"+opsForValue.get(key));
+		assertEquals(opsForValue.get(key), "1000");
+	}
+	
 	@Test
 	@DisplayName("Redis set value with timeout test")
 	void setValuesWithTimeoutTest() {

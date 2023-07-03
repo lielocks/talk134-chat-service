@@ -3,7 +3,7 @@ package kr.co.talk.domain.chatroom.listener;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -31,7 +31,7 @@ public class ChatroomRemoveConsumer {
 	 * @param ack
 	 * @throws JsonProcessingException
 	 */
-	@KafkaListener(topics = KafkaConstants.TOPIC_REMOVE_CHATTING, groupId = KafkaConstants.GROUP_CHAT, containerFactory = "concurrentKafkaListenerContainerFactory")
+	@KafkaListener(topics = KafkaConstants.TOPIC_REMOVE_CHATTING, groupId = "${spring.kafka.group}", containerFactory = "concurrentKafkaListenerContainerFactory")
 	public void removeChatting(String msg, Acknowledgment ack) throws JsonProcessingException {
 		long roomId = Long.valueOf(msg);
 		log.info("Received Msg Chat server, message : {}", roomId);

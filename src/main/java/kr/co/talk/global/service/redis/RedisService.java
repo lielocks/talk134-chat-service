@@ -347,6 +347,7 @@ public class RedisService {
         }
     }
 
+    
     public void deleteCountAndChatroomKey(long roomId) {
         String key = "*" + RedisConstants.CHATROOM;
         String countKey = roomId + "_" + "*" + RedisConstants.COUNT;
@@ -370,5 +371,9 @@ public class RedisService {
             redisTemplate.delete(chatroomKeys);
         }
     }
-
+    
+    public void deleteQuestionKey(String roomId, long userId) {
+  	  String questionKey = roomId + "_" + userId + RedisConstants.QUESTION;
+  	  redisTemplate.delete(questionKey);
+  }
 }

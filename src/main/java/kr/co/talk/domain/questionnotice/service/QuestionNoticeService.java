@@ -126,7 +126,7 @@ public class QuestionNoticeService {
                 .build())
             .metadata(QuestionNoticeResponseDto.QuestionNoticeMetadata.builder()
                 .senderId(senderId)
-                .questionNumber(questionNumber)
+                .questionNumber(questionIndex + 1)
                 .finalQuestionNumber(dto.getQuestionList().size())
                 .build())
             .build();

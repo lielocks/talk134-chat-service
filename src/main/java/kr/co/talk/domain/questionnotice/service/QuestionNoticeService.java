@@ -51,16 +51,19 @@ public class QuestionNoticeService {
             }
             var userList = userClient.requiredEnterInfo(0, chatroomUsersList.stream()
                     .map(ChatroomUsers::getUserId)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toList()))
+                .stream()
+                .map(QuestionNoticeResponseDto.User::of)
+                .collect(Collectors.toUnmodifiableList());
 
             List<QuestionNoticeManagementRedisDto.QuestionUserMap> tempUserMaps = new ArrayList<>();
 
             userList.forEach(enterInfo -> {
                 List<Long> questionCodes = redisService.findQuestionCode(roomId, enterInfo.getUserId());
                 questionCodes.forEach(code -> tempUserMaps.add(QuestionNoticeManagementRedisDto.QuestionUserMap.builder()
-                        .userId(enterInfo.getUserId())
-                        .questionCode(code)
-                        .build()));
+                    .userId(enterInfo.getUserId())
+                    .questionCode(code)
+                    .build()));
             });
 
             List<QuestionNoticeManagementRedisDto.QuestionUserMap> finalUserMaps = new ArrayList<>();
@@ -71,7 +74,7 @@ public class QuestionNoticeService {
                 var randomPickedObject = tempUserMaps.get(randomIndex);
                 // 랜덤하게 뽑은 질문의 유저가 방금 추가한 유저와 같을 때는 skip. 다시.
                 if (!finalUserMaps.isEmpty()
-                        && finalUserMaps.get(finalUserMaps.size() - 1).getUserId() == randomPickedObject.getUserId()) {
+                    && finalUserMaps.get(finalUserMaps.size() - 1).getUserId() == randomPickedObject.getUserId()) {
                     continue;
                 }
                 finalUserMaps.add(randomPickedObject);
@@ -79,9 +82,9 @@ public class QuestionNoticeService {
             } while (!CollectionUtils.isEmpty(tempUserMaps));
 
             dto = QuestionNoticeManagementRedisDto.builder()
-                    .userList(userList)
-                    .questionList(finalUserMaps)
-                    .build();
+                .userList(userList)
+                .questionList(finalUserMaps)
+                .build();
             questionNoticeRedisService.saveCurrentQuestionStatus(roomId, dto);
         }
 
@@ -95,33 +98,33 @@ public class QuestionNoticeService {
 
         var currentUserId = dto.getQuestionList().get(questionIndex).getUserId();
         var speaker = dto.getUserList().stream()
-                .filter(enterInfo -> enterInfo.getUserId() == currentUserId)
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.error("Redis data validation error.\n" +
-                            "Current User Id: {}\n", currentUserId);
-                    return new CustomException(CustomError.SERVER_ERROR);
-                });
+            .filter(enterInfo -> enterInfo.getUserId() == currentUserId)
+            .findFirst()
+            .orElseThrow(() -> {
+                log.error("Redis data validation error.\n" +
+                    "Current User Id: {}\n", currentUserId);
+                return new CustomException(CustomError.SERVER_ERROR);
+            });
 
         Question currentQuestion = questionRepository.findById(dto.getQuestionList().get(questionIndex).getQuestionCode())
-                .orElseThrow(CustomException::new);
+            .orElseThrow(CustomException::new);
 
         return QuestionNoticeResponseDto.builder()
-                .speaker(speaker)
-                .userList(dto.getUserList())
-                .topic(Topic.builder()
-                        .keyword(currentQuestion.getKeyword().getName())
-                        .questionCode(currentQuestion.getQuestionId())
-                        .questionName(currentQuestion.getContent())
-                        .depth(keywordService.convertIdIntoDepth(currentQuestion.getQuestionId()))
-                        .questionGuide(currentQuestion.getGuideList())
-                        .build())
-                .metadata(QuestionNoticeResponseDto.QuestionNoticeMetadata.builder()
-                        .senderId(senderId)
-                        .questionNumber(questionNumber)
-                        .finalQuestionNumber(dto.getQuestionList().size())
-                        .build())
-                .build();
+            .speaker(speaker)
+            .userList(dto.getUserList())
+            .topic(Topic.builder()
+                .keywordName(currentQuestion.getKeyword().getName())
+                .questionId(currentQuestion.getQuestionId())
+                .questionName(currentQuestion.getContent())
+                .depth(keywordService.convertIdIntoDepth(currentQuestion.getQuestionId()))
+                .questionGuide(currentQuestion.getGuideList())
+                .build())
+            .metadata(QuestionNoticeResponseDto.QuestionNoticeMetadata.builder()
+                .senderId(senderId)
+                .questionNumber(questionNumber)
+                .finalQuestionNumber(dto.getQuestionList().size())
+                .build())
+            .build();
     }
 
 }

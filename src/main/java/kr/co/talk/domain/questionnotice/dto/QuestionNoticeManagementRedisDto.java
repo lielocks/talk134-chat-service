@@ -1,6 +1,5 @@
 package kr.co.talk.domain.questionnotice.dto;
 
-import kr.co.talk.domain.chatroom.dto.RequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +20,7 @@ public class QuestionNoticeManagementRedisDto {
      */
     private List<QuestionUserMap> questionList;
 
-    private List<RequestDto.ChatRoomEnterResponseDto> userList;
+    private List<QuestionNoticeResponseDto.User> userList;
 
     @Builder
     @Data

@@ -26,7 +26,7 @@ public class EmoticonService {
         return chatroomRepository.findChatroomByChatroomId(roomId);
     }
 
-    public EmoticonResponseDto saveEmoticonHistoryToRedis(PubEmoticonPayload payload) throws Exception {
+    public EmoticonResponseDto saveEmoticonHistoryToRedis(PubEmoticonPayload payload) {
         EmoticonCode emoticonCode = EmoticonCode.of(payload.getEmoticonCode());
         RoomEmoticon value = RoomEmoticon.builder()
                 .emoticonCode(emoticonCode)
@@ -50,8 +50,8 @@ public class EmoticonService {
                 .filter(emo -> emo.getToUserId() == userId)
                 .collect(Collectors.groupingBy(RoomEmoticon::getEmoticonCode))
                 .forEach((emoticonCode, roomEmoticons) -> emoticons.add(UserReceivedEmoticonDto.UserReceivedEmoticon.builder()
-                        .code(emoticonCode.getCode())
-                        .amount(roomEmoticons.size())
+                        .emoticonCode(emoticonCode.getCode())
+                        .emoticonCount(roomEmoticons.size())
                         .build()));
 
         return UserReceivedEmoticonDto.builder()

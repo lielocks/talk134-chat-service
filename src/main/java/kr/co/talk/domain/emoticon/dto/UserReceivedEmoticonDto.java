@@ -13,7 +13,7 @@ public class UserReceivedEmoticonDto {
     @Builder
     @Data
     public static class UserReceivedEmoticon {
-        private int code;
-        private int amount;
+        private int emoticonCode;
+        private int emoticonCount;
     }
 }

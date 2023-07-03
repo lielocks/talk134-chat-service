@@ -88,13 +88,18 @@ public class QuestionNoticeService {
             questionNoticeRedisService.saveCurrentQuestionStatus(roomId, dto);
         }
 
-        // 들어온 questionNumber가 기존값이랑 다를 때 새로 저장
-        if (questionNoticeRedisService.getCurrentQuestionNumber(roomId) != questionNumber) {
+        // 들어온 questionNumber가 기존 저장값보다 낮거나 같을때는 현재 저장된 값으로 리턴
+        final int currentQuestionNumber = questionNoticeRedisService.getCurrentQuestionNumber(roomId);
+        final int questionIndex;
+        if (questionNumber <= currentQuestionNumber) {
+            questionIndex = currentQuestionNumber - 1;
+        } else {
+            // questionNumber가 기존값보다 큰 경우 새로 저장
             questionNoticeRedisService.saveCurrentQuestionNumber(roomId, questionNumber);
+            questionIndex = questionNumber - 1;
         }
 
         // questionNumber는 1부터 시작이라 0-based index를 위해 1 빼줌
-        int questionIndex = questionNumber - 1;
 
         var currentUserId = dto.getQuestionList().get(questionIndex).getUserId();
         var speaker = dto.getUserList().stream()

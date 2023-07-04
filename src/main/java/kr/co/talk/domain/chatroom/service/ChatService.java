@@ -32,7 +32,8 @@ public class ChatService {
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
-        return ChatEnterResponseDto.builder().checkInFlag(after10Minutes(chatEnterDto)).chatroomUserInfos(getResponseDto(chatEnterDto)).requestId(chatEnterDto.getUserId()).build();
+        return ChatEnterResponseDto.builder().type(setSocketType(chatEnterDto.getUserId(), chatEnterDto.getRoomId())).checkInFlag(after10Minutes(chatEnterDto))
+                .chatroomUserInfos(getResponseDto(chatEnterDto)).requestId(chatEnterDto.getUserId()).build();
     }
 
     private List<ChatEnterResponseDto.ChatroomUserInfo> getResponseDto(ChatEnterDto chatEnterDto) {
@@ -45,6 +46,7 @@ public class ChatService {
         ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
 
         chatroomUsersByUserId.activeFlagOn(flag);
+        chatroomUsersByUserId.setEntered(true);
 
         List<Long> idList = chatroomUsers.stream()
                 .map(ChatroomUsers::getUserId)
@@ -213,6 +215,13 @@ public class ChatService {
         }
 
         return verify;
+    }
+
+    private SocketType setSocketType(long userId, long roomId) {
+        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(roomId, userId);
+        if (Boolean.TRUE.equals(user.isEntered())) {
+            return SocketType.RE_ENTER;
+        } else return SocketType.NEW_CHATROOM;
     }
 
 }

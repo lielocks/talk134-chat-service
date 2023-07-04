@@ -37,11 +37,16 @@ public class ChatroomUsers {
 
     private int socketFlag;
 
+    private boolean entered;
+
     public void activeFlagOn(boolean activeFlag) {
         this.activeFlag = activeFlag;
     }
 
     public void setSocketFlag(int socketFlag) {
         this.socketFlag = socketFlag;
+    }
+    public void setEntered(boolean entered) {
+        this.entered = entered;
     }
 }

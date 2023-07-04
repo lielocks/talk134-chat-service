@@ -7,16 +7,19 @@ import kr.co.talk.domain.chatroomusers.entity.Question;
 import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
 import kr.co.talk.domain.chatroomusers.repository.QuestionRepository;
 import kr.co.talk.domain.chatroomusers.service.KeywordService;
+import kr.co.talk.domain.emoticon.dto.EmoticonResponseDto;
 import kr.co.talk.domain.questionnotice.dto.QuestionNoticeManagementRedisDto;
 import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto;
 import kr.co.talk.domain.questionnotice.dto.QuestionNoticeResponseDto.Topic;
 import kr.co.talk.global.client.UserClient;
+import kr.co.talk.global.constants.StompConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.math.RandomUtils;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -36,6 +39,7 @@ public class QuestionNoticeService {
     private final QuestionRepository questionRepository;
     private final KeywordService keywordService;
     private final QuestionNoticeRedisService questionNoticeRedisService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional(readOnly = true)
     public QuestionNoticeResponseDto getQuestionNotice(final long roomId, final int questionNumber, final long senderId) {
@@ -96,6 +100,10 @@ public class QuestionNoticeService {
         } else {
             // questionNumber가 기존값보다 큰 경우 새로 저장
             questionNoticeRedisService.saveCurrentQuestionNumber(roomId, questionNumber);
+            messagingTemplate.convertAndSend(
+                StompConstants.getRoomEmoticonDestination(roomId),
+                EmoticonResponseDto.builder().emoticonCode(0).build()
+            );
             questionIndex = questionNumber - 1;
         }
 

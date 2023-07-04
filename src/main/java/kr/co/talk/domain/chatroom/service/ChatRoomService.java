@@ -179,6 +179,7 @@ public class ChatRoomService {
 	public void saveFeedbackToRedis(long userId, FeedbackDto feedbackDto, Map<String, Object> entry) {
 		FeedbackDto feedback = (FeedbackDto) entry.get(String.valueOf(userId));
 
+		feedback.setUserId(userId);
 		feedback.setStatusEnergy(feedbackDto.getStatusEnergy());
 		feedback.setStatusRelation(feedbackDto.getStatusRelation());
 		feedback.setStatusStress(feedbackDto.getStatusStress());

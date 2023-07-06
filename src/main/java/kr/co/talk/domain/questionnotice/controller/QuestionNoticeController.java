@@ -24,6 +24,7 @@ public class QuestionNoticeController {
 
     @MessageMapping("/question-notice/{roomId}")
     public void publishQuestionNotification(@DestinationVariable Long roomId, @Payload QuestionNoticePayload payload) {
+        log.info("question notice payload :: {}", payload);
         if (roomId == null) {
             return;
         }

@@ -32,6 +32,7 @@ public class ChatService {
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
+        log.info("socket Type :: {}", setSocketType(chatEnterDto.getUserId(), chatEnterDto.getRoomId()));
         return ChatEnterResponseDto.builder().type(setSocketType(chatEnterDto.getUserId(), chatEnterDto.getRoomId())).checkInFlag(after10Minutes(chatEnterDto))
                 .chatroomUserInfos(getResponseDto(chatEnterDto)).requestId(chatEnterDto.getUserId()).build();
     }

@@ -8,6 +8,7 @@ import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.exception.ErrorDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Controller;
 
 @RequiredArgsConstructor
 @Controller
+@Slf4j
 public class QuestionNoticeController {
     private final QuestionNoticeService questionNoticeService;
     private final SimpMessagingTemplate template;
@@ -31,6 +33,7 @@ public class QuestionNoticeController {
                     payload.getQuestionNumber(),
                     payload.getUserId());
             template.convertAndSend(StompConstants.generateQuestionNoticeSubUrl(roomId), dto);
+            log.info("question notice response :: {}", dto);
         } catch (CustomException e) {
             sendError(roomId, e.getCustomError());
         }

@@ -22,6 +22,7 @@ public enum CustomError {
     QUESTION_ALREADY_REGISTERED(4005, "이미 질문을 2회 등록하였습니다.", HttpStatus.BAD_REQUEST.value()),
     QUESTION_ID_NOT_MATCHED (4006, "등록하신 질문이 아닙니다.", HttpStatus.BAD_REQUEST.value()),
     QUESTION_ORDER_CHANCE_ONCE (4007, "질문 카드 순서 등록은 1회 가능합니다.", HttpStatus.BAD_REQUEST.value()),
+    NOT_DISTINCT_QUESTION_LIST (4008, "이미 순서가 등록된 질문 카드입니다.", HttpStatus.BAD_REQUEST.value()),
 
     // 질문 알림 조회시
     ALREADY_FINISHED(5000, "이미 종료된 대화방입니다.", BAD_REQUEST),

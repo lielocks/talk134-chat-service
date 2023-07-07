@@ -37,7 +37,6 @@ public class FeedbackDto implements Serializable {
 		
 		private long toUserId;
 		private String review;
-		private int feedbackScore;
 	}
 
 }

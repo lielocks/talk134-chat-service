@@ -32,6 +32,7 @@ public class ChatService {
     @Transactional
     public ChatEnterResponseDto sendChatMessage(ChatEnterDto chatEnterDto) throws CustomException {
         setUserInfoRedis(chatEnterDto);
+        log.info("socket Type :: {}", setSocketType(chatEnterDto.getUserId(), chatEnterDto.getRoomId()));
         return ChatEnterResponseDto.builder().type(setSocketType(chatEnterDto.getUserId(), chatEnterDto.getRoomId())).checkInFlag(after10Minutes(chatEnterDto))
                 .chatroomUserInfos(getResponseDto(chatEnterDto)).requestId(chatEnterDto.getUserId()).build();
     }
@@ -101,11 +102,11 @@ public class ChatService {
         }
         redisService.pushUserChatRoom(chatEnterDto.getUserId(), chatEnterDto.getRoomId());
         redisService.roomCreateTime(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
-        String redisValue = redisService.getValues(key);
+        String redisValue = redisService.getValues(key); //이미 참가한 roomId
         log.info("redis Value :: {}", redisValue);
         boolean b = redisValue.equals(String.valueOf(chatEnterDto.getRoomId()));
-
-        if (!b) {
+        ChatroomUsers joinedUserInfo = usersRepository.findChatroomUsersByChatroomIdAndUserId(Long.valueOf(redisValue), chatroomUsersByUserId.getUserId());
+        if (!b && joinedUserInfo.getSocketFlag() > 3) {
             throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
         }
     }

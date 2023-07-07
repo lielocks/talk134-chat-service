@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -147,7 +148,7 @@ public class ChatRoomService {
 
 		ChatroomNoticeDto chatroomNoticeDto = ChatroomNoticeDto.builder()
 				.roomId(chatroom.getChatroomId())
-				.timeout(requiredCreateChatroomInfo.getTimeout())
+				.timeout(getTimeoutMillis(requiredCreateChatroomInfo.getTimeout()))
 				.createTime(System.currentTimeMillis())
 				.build();
 		
@@ -155,6 +156,10 @@ public class ChatRoomService {
 		
 		log.info("chatroom create publish event");
 		applicationEventPublisher.publishEvent(eventModel);
+	}
+
+	private long getTimeoutMillis(long timeout) {
+		return Duration.ofMinutes(timeout).toMillis();
 	}
 
 	/**

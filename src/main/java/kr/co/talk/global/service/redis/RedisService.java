@@ -235,7 +235,7 @@ public class RedisService {
     }
 
     /**
-     * expire CHATROOM timeout -> 대화 마감 timeout scheduler 에서 set 해줌
+     * CHATROOM timeout -> 모든 유저 feedback 등록까지 완료 후 remove consumer 에서 expire
      */
     public void pushUserChatRoom(long userId, long roomId) throws CustomException {
         String key = userId + RedisConstants.CHATROOM;

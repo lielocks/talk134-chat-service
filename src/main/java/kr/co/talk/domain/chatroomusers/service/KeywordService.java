@@ -119,6 +119,8 @@ public class KeywordService {
 
         if (!questionCode.containsAll(listDto.getQuestionCodeList())) {
             throw new CustomException(CustomError.QUESTION_ID_NOT_MATCHED);
+        } else if (listDto.getQuestionCodeList().stream().distinct().count() != listDto.getQuestionCodeList().size()) {
+            throw new CustomException(CustomError.NOT_DISTINCT_QUESTION_LIST);
         }
         Long countValue = redisService.setQuestionCode(listDto.getUserId(), listDto.getRoomId(), listDto);
         List<ChatroomUsers> users = usersRepository.findChatroomUsersByChatroom_ChatroomId(listDto.getRoomId());

@@ -93,6 +93,8 @@ public class ChatController {
                 orderChanceOnce(questionCodeDto.getRoomId());
             } else if (e.getCustomError() == CustomError.QUESTION_ID_NOT_MATCHED) {
                 questionAllContain(questionCodeDto.getRoomId());
+            } else if (e.getCustomError() == CustomError.NOT_DISTINCT_QUESTION_LIST) {
+                questionCodeDuplicate(questionCodeDto.getRoomId());
             }
         }
     }
@@ -151,6 +153,11 @@ public class ChatController {
     private void questionAllContain (Long roomId) {
         template.convertAndSend(StompConstants.getRegisterQuestionOrder(roomId), ErrorDto.createErrorDto(CustomError.QUESTION_ID_NOT_MATCHED));
         log.info("get the Destination of QUESTION LIST DO NOT CONTAIN ALL ERROR :: {}", StompConstants.getRegisterQuestionOrder(roomId));
+    }
+
+    private void questionCodeDuplicate (Long roomId) {
+        template.convertAndSend(StompConstants.getRegisterQuestionOrder(roomId), ErrorDto.createErrorDto(CustomError.NOT_DISTINCT_QUESTION_LIST));
+        log.info("get the Destination of QUESTION LIST DUPLICATE ERROR :: {}", StompConstants.getRegisterQuestionOrder(roomId));
     }
 
 }

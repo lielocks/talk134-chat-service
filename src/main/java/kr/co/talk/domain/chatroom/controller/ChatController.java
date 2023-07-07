@@ -20,6 +20,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
@@ -113,6 +114,11 @@ public class ChatController {
             log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
         }
 
+    }
+
+    @Scheduled(fixedRate = 10000)
+    public void sendHeartbeat() {
+        template.convertAndSend("/sub/heartbeat", "HEARTBEAT");
     }
 
     private void blockSameUser(Long roomId) {

@@ -116,6 +116,16 @@ public class RedisService {
                     return null;
                 }));
     }
+    
+    public Object getValueOfMap(String key, String subKey, Class<?> clazz) {
+		try {
+			return objectMapper.readValue(opsForMap.get(key, subKey), clazz);
+		} catch (JsonProcessingException e) {
+			log.error("json parse error", e);
+		}
+		return null;
+
+	}
 
     public void deleteMap(String key, String fieldKey) {
         opsForMap.delete(key, fieldKey);

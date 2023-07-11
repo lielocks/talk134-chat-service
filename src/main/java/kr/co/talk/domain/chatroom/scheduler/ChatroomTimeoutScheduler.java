@@ -19,35 +19,37 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class ChatroomTimeoutScheduler {
-    private final RedisService redisService;
-    private final TimeoutNoticeService timeoutNoticeService;
+	private final RedisService redisService;
+	private final TimeoutNoticeService timeoutNoticeService;
 
-    private static final long NOTICE_5MINUTE = Duration.ofMinutes(5).toMillis();
+	private static final long NOTICE_5MINUTE = Duration.ofMinutes(5).toMillis();
 
-    @Scheduled(fixedRate = 3000)
-    public void scheduleNoticeTask() {
-        // 채팅방 timeout check
-        Map<String, Object> chatroomNoticeEntry =
-                redisService.getEntry(RedisConstants.ROOM_NOTICE, ChatroomNoticeDto.class);
+	@Scheduled(fixedRate = 3000)
+	public void scheduleNoticeTask() {
+		// 채팅방 timeout check
+		Map<String, Object> chatroomNoticeEntry = redisService.getEntry(RedisConstants.ROOM_NOTICE,
+				ChatroomNoticeDto.class);
 
-        chatroomNoticeEntry.forEach((roomId, value) -> {
-            ChatroomNoticeDto cn = (ChatroomNoticeDto) value;
-            long currentTime = System.currentTimeMillis();
+		chatroomNoticeEntry.forEach((roomId, value) -> {
+			ChatroomNoticeDto cn = (ChatroomNoticeDto) value;
+			if (cn.isActive()) {
+				long currentTime = System.currentTimeMillis();
 
-            // 5분 전 알림
-            if (cn.getCreateTime() + cn.getTimeout() > currentTime
-                    && cn.getCreateTime() + cn.getTimeout() <= currentTime + NOTICE_5MINUTE
-                    && !cn.isNotice()) {
-                cn.setNotice(true); // 5분전 공지 flag
-                redisService.pushMap(RedisConstants.ROOM_NOTICE, roomId, cn);
-                timeoutNoticeService.sendFiveMinuteLeftMessage(cn.getRoomId());
-            // 대화 마감 알림
-            } else if (cn.getCreateTime() + cn.getTimeout() <= currentTime) {
-                redisService.deleteMap(RedisConstants.ROOM_NOTICE, roomId);
-                timeoutNoticeService.sendTimedOutMessage(cn.getRoomId());
-            }
-        });
+				// 5분 전 알림
+				if (cn.getCreateTime() + cn.getTimeout() > currentTime
+						&& cn.getCreateTime() + cn.getTimeout() <= currentTime + NOTICE_5MINUTE && !cn.isNotice()) {
+					cn.setNotice(true); // 5분전 공지 flag
+					redisService.pushMap(RedisConstants.ROOM_NOTICE, roomId, cn);
+					timeoutNoticeService.sendFiveMinuteLeftMessage(cn.getRoomId());
+					// 대화 마감 알림
+				} else if (cn.getCreateTime() + cn.getTimeout() <= currentTime) {
+					redisService.deleteMap(RedisConstants.ROOM_NOTICE, roomId);
+					timeoutNoticeService.sendTimedOutMessage(cn.getRoomId());
+				}
+			}
 
-    }
+		});
+
+	}
 
 }

@@ -135,6 +135,12 @@ public class ChatService {
             boolean allUsersActive = allChatroomUsersActive(chatroomUsers);
             if (allUsersActive) {
                 setAllChatroomUsersActiveFlag(chatroomUsers, false);
+                
+                ChatroomNoticeDto chatroomNoticeDto = (ChatroomNoticeDto) redisService.getValueOfMap(RedisConstants.ROOM_NOTICE, String.valueOf(chatroom.getChatroomId()), ChatroomNoticeDto.class);
+                chatroomNoticeDto.setActive(true);
+                chatroomNoticeDto.setCreateTime(System.currentTimeMillis());
+                redisService.pushMap(RedisConstants.ROOM_NOTICE, String.valueOf(chatroomNoticeDto.getRoomId()), chatroomNoticeDto);
+                
                 flag = 1;
             } else {
                 flag = 0;

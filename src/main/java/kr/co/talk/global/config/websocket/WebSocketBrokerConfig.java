@@ -28,6 +28,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
                         "https://134.works"
                 )
                 .setAllowedOriginPatterns("*")
+                .addInterceptors(new HttpHandShakeInterceptor())
                 .withSockJS();
     }
 
@@ -37,6 +38,16 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
                 .setTaskScheduler(taskScheduler())
                 .setHeartbeatValue(new long[]{10000, 10000});
         registry.setApplicationDestinationPrefixes("/pub");
+    }
+
+    /**
+     * Web socket transport.
+     */
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        registration.setMessageSizeLimit(160 * 64 * 1024);    // default : 64 * 1024
+        registration.setSendTimeLimit(20 * 10000);            // default : 10 * 10000
+        registration.setSendBufferSizeLimit(10 * 512 * 1024); // default : 512 * 1024
     }
 
 }

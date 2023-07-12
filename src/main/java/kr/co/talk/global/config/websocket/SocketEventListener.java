@@ -3,8 +3,6 @@ package kr.co.talk.global.config.websocket;
 import kr.co.talk.domain.chatroom.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -15,20 +13,17 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
-import javax.websocket.Session;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class SocketEventListener {
     private final ChatService chatService;
-    private static final Logger logger = LoggerFactory.getLogger(SocketEventListener.class);
 
-    private static java.util.Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<String, WebSocketSession>();
+    private static Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
 
     /**
      * Handle session connected events.
@@ -67,7 +62,7 @@ public class SocketEventListener {
             log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
         }
 
-        logger.info("Web socket session closed. Message : [{}]", event.getMessage());
+        log.info("Web socket session closed. Message : [{}]", event.getMessage());
     }
 
     /**
@@ -89,13 +84,10 @@ public class SocketEventListener {
     }
 
     /**
-     * Register browser session.
-     *
-     * @param session the browser session
-     * @param sessionId  the session id
+     * Register session.
      */
-    public synchronized void registerBrowserSession(WebSocketSession session, String sessionId) {
-        sessionMap.put(sessionId, session);
+    public synchronized void registerBrowserSession(String sessionId, WebSocketSession webSocketSession) {
+        sessionMap.put(sessionId, webSocketSession);
     }
 
 

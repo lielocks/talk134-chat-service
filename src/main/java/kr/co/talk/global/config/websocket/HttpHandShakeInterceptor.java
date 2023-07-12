@@ -12,7 +12,7 @@ import java.util.Map;
 public class HttpHandShakeInterceptor implements HandshakeInterceptor {
 
     /**
-     * Before handshake boolean.
+     * before handshake
      *
      * @param request    the request
      * @param response   the response
@@ -35,17 +35,11 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
     }
 
     /**
-     * After handshake.
-     *
-     * @param request   the request
-     * @param response  the response
-     * @param wsHandler the ws handler
-     * @param exception the exception
+     * after handshake
      */
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                WebSocketHandler wsHandler, Exception exception) {
-        // nothing to do.
     }
 
 }

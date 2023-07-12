@@ -16,11 +16,13 @@ import kr.co.talk.global.exception.ErrorDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.http.MediaType;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.WebSocketSession;
@@ -39,7 +41,7 @@ public class ChatController {
     private final SocketEventListener listener;
 
     @MessageMapping("/enter")
-    public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor, WebSocketSession session) {
+    public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor, WebSocketSession webSocketSession) {
         try {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
             template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
@@ -48,7 +50,7 @@ public class ChatController {
 
 //            headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
 //            headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
-            listener.registerBrowserSession(session, headerAccessor.getSessionId());
+            listener.registerBrowserSession(headerAccessor.getSessionId(), webSocketSession);
             listener.createHeaders(headerAccessor.getSessionId(),chatEnterDto.getUserId(), chatEnterDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }

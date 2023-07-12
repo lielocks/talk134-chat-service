@@ -32,9 +32,9 @@ public class SessionHandler extends StompSessionHandlerAdapter {
     /**
      * subscribed url
      */
-    public synchronized void subscribe(String destination) {
+    public void subscribe(String destination) {
         session.subscribe(destination, this);
-        log.debug("[{}] Subscribed.", destination);
+        log.debug("[ {} ] subscribed", destination);
     }
 
 }

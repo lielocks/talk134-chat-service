@@ -37,7 +37,7 @@ public class ChatroomRemoveConsumer {
 		log.info("Received Msg Chat server, message : {}", roomId);
 
 		// 채팅방 종료 후 채팅방 remove
-		Optional<Chatroom> chatroom = chatroomRepository.findById(roomId);
+		Optional<Chatroom> chatroom = chatroomRepository.findChatroomByChatroomIdFetch(roomId);
 		// 질문 알림 조회용으로 redis에 저장했던 데이터도 삭제.
 		chatroom.ifPresent(c -> {
 			chatroomRepository.delete(c);

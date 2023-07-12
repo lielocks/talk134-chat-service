@@ -47,10 +47,8 @@ public class ChatController {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
             template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
             log.info("response :: {}", responseDto);
-            log.info("session id :::::: {}", headerAccessor.getSessionId());
 
             listener.createHeaders(headerAccessor, chatEnterDto.getUserId(), chatEnterDto.getRoomId());
-            log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }
         catch (CustomException e) {
             if (e.getCustomError() == CustomError.CHATROOM_DOES_NOT_EXIST) {
@@ -71,7 +69,6 @@ public class ChatController {
             template.convertAndSend(StompConstants.getChatUserSelectKeyword(keywordSendDto.getRoomId(), keywordSendDto.getUserId()), responseDto);
 
             listener.createHeaders(headerAccessor, keywordSendDto.getUserId(), keywordSendDto.getRoomId());
-            log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }
         catch (CustomException e) {
             if (e.getCustomError() == CustomError.KEYWORD_DOES_NOT_MATCH) {
@@ -90,7 +87,6 @@ public class ChatController {
             template.convertAndSend(StompConstants.getRegisterQuestionOrder(questionCodeDto.getRoomId()), allRegisteredDto);
 
             listener.createHeaders(headerAccessor, questionCodeDto.getUserId(), questionCodeDto.getRoomId());
-            log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }
         catch (CustomException e) {
             if (e.getCustomError() == CustomError.QUESTION_LIST_SIZE_MISMATCH) {

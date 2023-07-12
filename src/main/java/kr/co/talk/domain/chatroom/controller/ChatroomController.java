@@ -115,5 +115,4 @@ public class ChatroomController {
 	public ResponseEntity<?> findFeedback(@RequestHeader(value = "userId") Long userId) {
 		return ResponseEntity.ok(userClient.getUserStaus(userId));
 	}
-
 }

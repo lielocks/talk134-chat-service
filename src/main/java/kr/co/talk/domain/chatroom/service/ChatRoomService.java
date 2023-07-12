@@ -149,7 +149,6 @@ public class ChatRoomService {
 		ChatroomNoticeDto chatroomNoticeDto = ChatroomNoticeDto.builder()
 				.roomId(chatroom.getChatroomId())
 				.timeout(getTimeoutMillis(requiredCreateChatroomInfo.getTimeout()))
-				.createTime(System.currentTimeMillis())
 				.build();
 		
 		CreateRoomNotiEventModel eventModel = CreateRoomNotiEventModel.builder().userId(userList).chatroomNoticeDto(chatroomNoticeDto).build();

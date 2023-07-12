@@ -20,5 +20,6 @@ public class ChatroomNoticeDto implements Serializable{
     private long roomId;
     private long timeout;
     private long createTime;
-    private boolean isNotice; // 5분전 안내 f
+    private boolean isNotice; // 5분전 안내 
+    private boolean active; // 모든 팀원이 준비가 되었을 때 부터 시작
 }

@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -41,17 +42,14 @@ public class ChatController {
     private final SocketEventListener listener;
 
     @MessageMapping("/enter")
-    public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor, WebSocketSession webSocketSession) {
+    public void message(@Payload ChatEnterDto chatEnterDto, SimpMessageHeaderAccessor headerAccessor) {
         try {
             ChatEnterResponseDto responseDto = chatService.sendChatMessage(chatEnterDto);
             template.convertAndSend(StompConstants.getOnlyRoomEnterDestination(chatEnterDto.getRoomId()), responseDto);
             log.info("response :: {}", responseDto);
+            log.info("session id :::::: {}", headerAccessor.getSessionId());
 
-
-//            headerAccessor.getSessionAttributes().put("userId", chatEnterDto.getUserId());
-//            headerAccessor.getSessionAttributes().put("roomId", chatEnterDto.getRoomId());
-            listener.registerBrowserSession(headerAccessor.getSessionId(), webSocketSession);
-            listener.createHeaders(headerAccessor.getSessionId(),chatEnterDto.getUserId(), chatEnterDto.getRoomId());
+            listener.createHeaders(headerAccessor, chatEnterDto.getUserId(), chatEnterDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }
         catch (CustomException e) {
@@ -72,8 +70,7 @@ public class ChatController {
             log.info("responseDto :: {}", responseDto);
             template.convertAndSend(StompConstants.getChatUserSelectKeyword(keywordSendDto.getRoomId(), keywordSendDto.getUserId()), responseDto);
 
-            headerAccessor.getSessionAttributes().put("userId", keywordSendDto.getUserId());
-            headerAccessor.getSessionAttributes().put("roomId", keywordSendDto.getRoomId());
+            listener.createHeaders(headerAccessor, keywordSendDto.getUserId(), keywordSendDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }
         catch (CustomException e) {
@@ -92,8 +89,7 @@ public class ChatController {
             log.info("responseDto :: {}", allRegisteredDto);
             template.convertAndSend(StompConstants.getRegisterQuestionOrder(questionCodeDto.getRoomId()), allRegisteredDto);
 
-            headerAccessor.getSessionAttributes().put("userId", questionCodeDto.getUserId());
-            headerAccessor.getSessionAttributes().put("roomId", questionCodeDto.getRoomId());
+            listener.createHeaders(headerAccessor, questionCodeDto.getUserId(), questionCodeDto.getRoomId());
             log.info("current header accessor attributes :: {}", headerAccessor.getSessionAttributes());
         }
         catch (CustomException e) {
@@ -109,21 +105,6 @@ public class ChatController {
         }
     }
 
-//    @EventListener
-//    public void webSocketDisconnectListener(SessionDisconnectEvent event) {
-//        log.info("disconnected event :: {}", event);
-//        // 어떤 userId, roomId 정보를 가진 session 이 끊겼는지 get message
-//        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-//        Optional<Object> userIdOpt = Optional.ofNullable(headerAccessor.getSessionAttributes().get("userId"));
-//        Optional<Object> roomIdOpt = Optional.ofNullable(headerAccessor.getSessionAttributes().get("roomId"));
-//        if (userIdOpt.isPresent() && roomIdOpt.isPresent()) {
-//            long userId = (Long) userIdOpt.get();
-//            long roomId = (Long) roomIdOpt.get();
-//            chatService.disconnectUserSetFalse(userId, roomId);
-//            log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
-//        }
-//
-//    }
 
     @Scheduled(fixedRate = 10000)
     public void sendHeartbeat() {

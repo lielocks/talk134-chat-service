@@ -14,11 +14,10 @@ public class HttpHandShakeInterceptor implements HandshakeInterceptor {
     /**
      * before handshake
      *
-     * @param request    the request
-     * @param response   the response
-     * @param wsHandler  the ws handler
-     * @param attributes the attributes
-     * @return the boolean
+     * @param request
+     * @param response
+     * @param wsHandler
+     * @param attributes
      * @throws Exception the exception
      */
     @Override

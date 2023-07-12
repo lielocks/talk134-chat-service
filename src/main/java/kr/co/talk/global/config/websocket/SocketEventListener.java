@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
@@ -33,7 +32,6 @@ public class SocketEventListener {
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-
         //GenericMessage msg = (GenericMessage) headerAccessor.getMessageHeaders().get("simpConnectMessage");
 
         log.info("Received a new web socket connection. Session ID : [{}]", headerAccessor.getSessionId());
@@ -83,23 +81,8 @@ public class SocketEventListener {
         return session;
     }
 
-    /**
-     * Register session.
-     */
-    public synchronized void registerBrowserSession(String sessionId, WebSocketSession webSocketSession) {
-        sessionMap.put(sessionId, webSocketSession);
-    }
 
-
-    /**
-     * Create headers message headers.
-     *
-     * @param sessionId the session id
-     * @return the message headers
-     */
-    public MessageHeaders createHeaders(String sessionId, long userId, long roomId) {
-        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create(SimpMessageType.MESSAGE);
-        headerAccessor.setSessionId(sessionId);
+    public MessageHeaders createHeaders(SimpMessageHeaderAccessor headerAccessor, long userId, long roomId) {
         headerAccessor.getSessionAttributes().put("userId", userId);
         headerAccessor.getSessionAttributes().put("roomId", roomId);
         headerAccessor.setLeaveMutable(true);

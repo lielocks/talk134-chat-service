@@ -42,7 +42,6 @@ public class SessionHandler extends StompSessionHandlerAdapter {
 
     @Override
     public Type getPayloadType(StompHeaders headers) {
-
         if (headers.getDestination().equals("/pub/enter")) {
             return ChatEnterResponseDto.class;
         } else if (headers.getDestination().equals("/pub/select/keyword")) {

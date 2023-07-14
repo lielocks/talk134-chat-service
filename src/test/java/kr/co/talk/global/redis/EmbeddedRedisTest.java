@@ -1,4 +1,4 @@
-package kr.co.talk.redis;
+package kr.co.talk.global.redis;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
@@ -11,11 +11,13 @@ import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import kr.co.talk.global.service.redis.RedisService;
 
 @SpringBootTest
 @ActiveProfiles(profiles = "test")
+@EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 public class EmbeddedRedisTest {
 
     @Autowired

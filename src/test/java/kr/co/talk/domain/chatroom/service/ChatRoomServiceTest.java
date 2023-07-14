@@ -1,46 +1,28 @@
 package kr.co.talk.domain.chatroom.service;
 
 import java.util.List;
-
-import org.aspectj.lang.annotation.Before;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.talk.domain.chatroom.dto.ChatroomListDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.FindChatroomResponseDto;
-import kr.co.talk.domain.chatroom.dto.RoomEmoticon;
 import kr.co.talk.domain.chatroom.model.Chatroom;
-import kr.co.talk.domain.chatroom.model.EmoticonCode;
-
 import static kr.co.talk.domain.chatroom.model.QChatroom.chatroom;
 import static kr.co.talk.domain.chatroomusers.entity.QChatroomUsers.chatroomUsers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import kr.co.talk.domain.chatroomusers.entity.ChatroomUsers;
 import kr.co.talk.global.client.UserClient;
-import kr.co.talk.global.constants.RedisConstants;
-import kr.co.talk.global.service.redis.RedisService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -57,6 +39,7 @@ public class ChatRoomServiceTest {
     @MockBean
     UserClient userClient;
 
+    
     @Test
     @DisplayName("채팅방 잘 만들어지는지 확인")
     @Transactional

@@ -19,7 +19,7 @@ public class RedisConfig {
     @Value("${spring.redis.port}")
     public int port;
 
-    @Bean
+    @Bean  
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration redisConfiguration = new RedisStandaloneConfiguration();
         redisConfiguration.setHostName(host);

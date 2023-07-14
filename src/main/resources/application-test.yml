@@ -1,0 +1,30 @@
+server:
+  port: 0 # 랜덤하게 지정
+  ssl:
+    enabled: false
+spring:
+  application:
+    name: chat-service
+  redis:
+    host: localhost
+    port: 6379
+  kafka:
+    bootstrap:
+      addresses: ${spring.embedded.kafka.brokers:localhost:9092}
+    group: group_chatting_test
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:userdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password: 
+    
+eureka:
+  client:
+    enabled: false

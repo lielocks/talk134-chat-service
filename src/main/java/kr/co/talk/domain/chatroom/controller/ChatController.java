@@ -13,24 +13,16 @@ import kr.co.talk.global.constants.StompConstants;
 import kr.co.talk.global.exception.CustomError;
 import kr.co.talk.global.exception.CustomException;
 import kr.co.talk.global.exception.ErrorDto;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.http.MediaType;
-import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-
-import javax.websocket.Session;
-import java.util.Optional;
 
 @RestController
 @Slf4j

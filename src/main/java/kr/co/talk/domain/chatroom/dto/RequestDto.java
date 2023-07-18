@@ -55,6 +55,9 @@ public class RequestDto {
      * 대화방 대기화면에 나타날 user info dto
      */
     @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PROTECTED)
     public static class ChatRoomEnterResponseDto {
         private Long userId;
         private String nickname;

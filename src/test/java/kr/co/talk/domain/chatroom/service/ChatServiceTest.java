@@ -14,10 +14,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,22 +28,22 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 
-@SpringBootTest
+//@SpringBootTest -> 해당 service business code 단위 test 에는 굳이 필요가 없을 듯
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles(profiles = "test")
 public class ChatServiceTest {
 
-    @Autowired
+    @InjectMocks
     private ChatService chatService;
 
-    @Autowired
+    @InjectMocks
     private ChatRoomService chatRoomService;
 
-    @Autowired
+    @Mock
     private ChatroomUsersRepository chatroomUsersRepository;
 
-    @MockBean
+    @Mock
     UserClient userClient;
 
     @BeforeEach

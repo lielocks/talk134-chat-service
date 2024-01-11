@@ -122,7 +122,9 @@ public class ChatService {
         ChatroomUsers chatroomUsersByUserId = usersRepository.findChatroomUsersByChatroomIdAndUserId(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
 
         // 화면 전환으로 enterDto 가 초기값으로 설정되었을때
-        Integer currentSocketFlag = getChatroomUsers(chatroom).stream().map(user -> user.getSocketFlag()).findFirst().get();
+        Integer currentSocketFlag =
+                getChatroomUsers(chatroom).stream().map(ChatroomUsers::getSocketFlag).findFirst().get();
+
         if (socketFlag < currentSocketFlag) {
             if (chatEnterDto.isSelected()) {
                 chatroomUsersByUserId.activeFlagOn(false);

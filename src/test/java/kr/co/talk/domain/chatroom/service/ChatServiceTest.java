@@ -1,5 +1,6 @@
 package kr.co.talk.domain.chatroom.service;
 
+import fixture.ChatFixture;
 import kr.co.talk.domain.chatroom.dto.ChatEnterDto;
 import kr.co.talk.domain.chatroom.dto.ChatEnterResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto;
@@ -14,9 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,64 +31,38 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 
-//@SpringBootTest -> 해당 service business code 단위 test 에는 굳이 필요가 없을 듯
+@SpringBootTest
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles(profiles = "test")
+@EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 public class ChatServiceTest {
 
-    @InjectMocks
+    @Autowired
     private ChatService chatService;
 
-    @InjectMocks
+    @Autowired
     private ChatRoomService chatRoomService;
 
-    @Mock
+    @Autowired
     private ChatroomUsersRepository chatroomUsersRepository;
 
-    @Mock
+    @MockBean
     UserClient userClient;
+
+    ChatFixture chatFixture;
 
     @BeforeEach
     void createChatRoom() {
-        String teamCode = "abcdef";
-        String chatroomName = "이솜, 이담, 해솔";
-
-        long createUserId = 48L;
-        List<Long> userList = List.of(48L, 53L, 62L);
-
-        RequestDto.FindChatroomResponseDto mockChatroomResponseDto = new RequestDto.FindChatroomResponseDto();
-        mockChatroomResponseDto.setTeamCode(teamCode);
-        mockChatroomResponseDto.setUserRole("ROLE_USER");
-
-        RequestDto.CreateChatroomResponseDto mockCreateChatroomResponseDto = new RequestDto.CreateChatroomResponseDto();
-        mockCreateChatroomResponseDto.setTimeout(10);
-        mockCreateChatroomResponseDto.setTeamCode(teamCode);
-        mockCreateChatroomResponseDto.setChatroomName(chatroomName);
-
-        doReturn(mockChatroomResponseDto).when(userClient).findChatroomInfo(anyLong());
-        doReturn(mockCreateChatroomResponseDto).when(userClient)
-                .requiredCreateChatroomInfo(anyLong(), anyList());
-
-        chatRoomService.createChatroom(createUserId, userList);
+        chatFixture = new ChatFixture();
+        chatFixture.setUpBeforeTest(userClient, chatRoomService);
     }
 
     @Test
     @DisplayName("채팅방 안에 사람들이 모두 참여했을때 다음 socket flag 로 set")
     void socketFlagOneStatus() {
         // given
-        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto = new ArrayList<>();
-        ChatRoomEnterResponseDto enterResponse1 =
-                ChatRoomEnterResponseDto.builder().nickname("차가운 매의 낮잠").userName("이솜").userId(48L).profileUrl("https://134-back.s3.ap-northeast-2.amazonaws.com/profile/co-a-sp.png").build();
-        mockChatroomEnterResponseDto.add(enterResponse1);
-
-        ChatRoomEnterResponseDto enterResponse2 =
-                ChatRoomEnterResponseDto.builder().nickname("차가운 바람의 일격").userName("이담").userId(53L).profileUrl("https://134-back.s3.ap-northeast-2.amazonaws.com/profile/co-d-bl.png").build();
-        mockChatroomEnterResponseDto.add(enterResponse2);
-
-        ChatRoomEnterResponseDto enterResponse3 =
-                ChatRoomEnterResponseDto.builder().nickname("떠오르는 바람의 일격").userName("해솔").userId(62L).profileUrl("https://134-back.s3.ap-northeast-2.amazonaws.com/profile/fl-d-bl.png").build();
-        mockChatroomEnterResponseDto.add(enterResponse3);
+        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto = chatFixture.createMockChatroomEnterResponseDto();
 
         // when
         doReturn(mockChatroomEnterResponseDto).when(userClient)
@@ -103,6 +80,7 @@ public class ChatServiceTest {
 
         ChatEnterDto chatEnterDto3 = ChatEnterDto.builder().selected(true).socketFlag(0).userId(62L).roomId(1L).build();
         ChatEnterResponseDto responseDto3 = chatService.sendChatMessage(chatEnterDto3);
+
         assertEquals(responseDto3.getChatroomUserInfos().get(0).getSocketFlag(), 1);
         assertEquals(responseDto3.getChatroomUserInfos().get(1).getSocketFlag(), 1);
         assertEquals(responseDto3.getChatroomUserInfos().get(2).getSocketFlag(), 1);
@@ -128,18 +106,7 @@ public class ChatServiceTest {
         mockCreateChatroomResponseDto.setTeamCode(teamCode);
         mockCreateChatroomResponseDto.setChatroomName(chatroomName);
 
-        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto = new ArrayList<>();
-        ChatRoomEnterResponseDto enterResponse1 =
-                ChatRoomEnterResponseDto.builder().nickname("차가운 매의 낮잠").userName("이솜").userId(48L).profileUrl("https://134-back.s3.ap-northeast-2.amazonaws.com/profile/co-a-sp.png").build();
-        mockChatroomEnterResponseDto.add(enterResponse1);
-
-        ChatRoomEnterResponseDto enterResponse2 =
-                ChatRoomEnterResponseDto.builder().nickname("차가운 바람의 일격").userName("이담").userId(53L).profileUrl("https://134-back.s3.ap-northeast-2.amazonaws.com/profile/co-d-bl.png").build();
-        mockChatroomEnterResponseDto.add(enterResponse2);
-
-        ChatRoomEnterResponseDto enterResponse3 =
-                ChatRoomEnterResponseDto.builder().nickname("떠오르는 바람의 일격").userName("해솔").userId(62L).profileUrl("https://134-back.s3.ap-northeast-2.amazonaws.com/profile/fl-d-bl.png").build();
-        mockChatroomEnterResponseDto.add(enterResponse3);
+        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto = chatFixture.createMockChatroomEnterResponseDto();
 
         // when
         doReturn(mockChatroomResponseDto).when(userClient).findChatroomInfo(anyLong());

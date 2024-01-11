@@ -69,11 +69,12 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 
-	// API dependencies are visible to consumers when building
 	testFixturesApi 'org.apache.commons:commons-lang3:3.9'
-	// Implementation dependencies are not leaked to consumers when building
 	testFixturesImplementation 'org.apache.commons:commons-text:1.6'
-	
+	testFixturesImplementation 'org.projectlombok:lombok'
+	testFixturesImplementation 'org.mockito:mockito-core:4.5.1'
+	testFixturesImplementation 'org.springframework:spring-tx:5.3.27'
+
 	// spring cloud config
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation "org.springframework.cloud:spring-cloud-starter-bus-kafka"

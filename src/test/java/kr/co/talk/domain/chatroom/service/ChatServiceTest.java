@@ -23,7 +23,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,34 +49,35 @@ public class ChatServiceTest {
     @MockBean
     UserClient userClient;
 
-    ChatFixture chatFixture;
+   ChatFixture chatFixture;
 
     @BeforeEach
     void createChatRoom() {
-        chatFixture = new ChatFixture();
         chatFixture.setUpBeforeTest(userClient, chatRoomService);
     }
 
     @Test
-    @DisplayName("채팅방 안에 사람들이 모두 참여했을때 다음 socket flag 로 set")
+    @DisplayName("채팅방 안에 사람들이 모두 참여했을때 다음 socket flag 로 set 됨")
     void socketFlagOneStatus() {
         // given
-        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto = chatFixture.createMockChatroomEnterResponseDto();
+        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto =
+                chatFixture.createMockChatroomEnterResponseDto();
 
         // when
         doReturn(mockChatroomEnterResponseDto).when(userClient)
                 .requiredEnterInfo(anyLong(), anyList());
-
-        // then
         ChatEnterDto chatEnterDto1 = ChatEnterDto.builder().selected(true).socketFlag(0).userId(48L).roomId(1L).build();
         chatService.sendChatMessage(chatEnterDto1);
 
         ChatEnterDto chatEnterDto2 = ChatEnterDto.builder().selected(true).socketFlag(0).userId(53L).roomId(1L).build();
         ChatEnterResponseDto responseDto2 = chatService.sendChatMessage(chatEnterDto2);
+
+        // then
         assertEquals(responseDto2.getChatroomUserInfos().get(0).getSocketFlag(), 0);
         assertEquals(responseDto2.getChatroomUserInfos().get(1).getSocketFlag(), 0);
         assertEquals(responseDto2.getChatroomUserInfos().get(2).getSocketFlag(), 0);
 
+        // 마지막 사람이 message 를 보내고 난 후 변경되는 socket flag
         ChatEnterDto chatEnterDto3 = ChatEnterDto.builder().selected(true).socketFlag(0).userId(62L).roomId(1L).build();
         ChatEnterResponseDto responseDto3 = chatService.sendChatMessage(chatEnterDto3);
 
@@ -88,7 +88,7 @@ public class ChatServiceTest {
     
     @Test
     @Transactional
-    @DisplayName("기존 채팅방에서 질문 선택까지 마친 후 (-> socket flag 4) 다른 채팅방에 참가할때")
+    @DisplayName("기존 채팅방에서 질문 선택까지 마친 후 (-> socket flag 4) 다른 채팅방에 참가할때 CHATROOM_USER_ALREADY_JOINED EXCEPTION")
     void chatRoomAlreadyJoined() {
         // given
         String teamCode = "abcdef";
@@ -106,7 +106,8 @@ public class ChatServiceTest {
         mockCreateChatroomResponseDto.setTeamCode(teamCode);
         mockCreateChatroomResponseDto.setChatroomName(chatroomName);
 
-        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto = chatFixture.createMockChatroomEnterResponseDto();
+        List<ChatRoomEnterResponseDto> mockChatroomEnterResponseDto =
+                chatFixture.createMockChatroomEnterResponseDto();
 
         // when
         doReturn(mockChatroomResponseDto).when(userClient).findChatroomInfo(anyLong());

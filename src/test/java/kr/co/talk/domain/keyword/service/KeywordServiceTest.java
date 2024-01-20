@@ -80,6 +80,35 @@ public class KeywordServiceTest {
         chatFixture.setUpBeforeTest(userClient, chatRoomService);
     }
 
+    @Test
+    @DisplayName("해당 test 는 user img code 마지막 두자릿수와 question status map 간의 상관관계를 나타냅니다")
+    void imgCodeAndQuestionStatusMap() {
+        // given
+        doReturn("ng").when(userClient)
+                .getUserImgCode(10L);
+        doReturn("sp").when(userClient)
+                .getUserImgCode(11L);
+        doReturn("ha").when(userClient)
+                .getUserImgCode(12L);
+        doReturn("fu").when(userClient)
+                .getUserImgCode(13L);
+        doReturn("bl").when(userClient)
+                .getUserImgCode(14L);
+        // ng 1 sp 2 ha 3 fu 4 bl 5
+        // when
+        Integer userStatusMap10L = keywordService.setUserStatusMap(10L);
+        Integer userStatusMap11L = keywordService.setUserStatusMap(11L);
+        Integer userStatusMap12L = keywordService.setUserStatusMap(12L);
+        Integer userStatusMap13L = keywordService.setUserStatusMap(13L);
+        Integer userStatusMap14L = keywordService.setUserStatusMap(14L);
+
+        // then
+        assertEquals(userStatusMap10L, 1);
+        assertEquals(userStatusMap11L, 2);
+        assertEquals(userStatusMap12L, 3);
+        assertEquals(userStatusMap13L, 4);
+        assertEquals(userStatusMap14L, 5);
+    }
 
     @Test
     @Transactional
@@ -99,9 +128,9 @@ public class KeywordServiceTest {
         doReturn("co-a-ng").when(userClient).getUserImgCode(48L); // userImgCode 끝자리 ng 는 question status map 1
         doReturn("co-d-sp").when(userClient).getUserImgCode(53L); // userImgCode 끝자리 sp 는 question status map 2
         doReturn("fl-d-ha").when(userClient).getUserImgCode(62L); // userImgCode 끝자리 ha 는 question status map 3
-        List<Long> user53Keyword1QuestionList = List.of(1L, 4L, 5L, 8L);
-        List<Long> user53Keyword2QuestionList = List.of(9L, 12L, 13L, 16L);
-        List<Long> user53Keyword3QuestionList = List.of(17L, 20L, 21L, 24L);
+        List<Long> user53Keyword1QuestionList = List.of(1L, 6L, 18L, 25L);
+        List<Long> user53Keyword2QuestionList = List.of(2L, 10L, 13L, 16L);
+        List<Long> user53Keyword3QuestionList = List.of(5L, 9L, 15L, 21L);
 
         SocketFlagResponseDto questionWithFlag = keywordService.setQuestionWithFlag(keywordSendDto);
         // 채팅방 참여 기록이 없을 때는 status map 에 맞는 question 만 할당됨
@@ -146,7 +175,7 @@ public class KeywordServiceTest {
     void setQuestionOrderTillTwice() {
         // given
         List<Long> keywordCode = new ArrayList<>(List.of(1L, 2L, 3L));
-        List<Long> questionCode = new ArrayList<>(List.of(1L, 9L, 17L));
+        List<Long> questionCode = new ArrayList<>(List.of(1L, 15L, 28L));
         redisService.pushQuestionList(1L, 53L, KeywordSetDto.builder().roomId(1L).registeredQuestionOrder(0).keywordCode(keywordCode).questionCode(questionCode).build());
 
         // when

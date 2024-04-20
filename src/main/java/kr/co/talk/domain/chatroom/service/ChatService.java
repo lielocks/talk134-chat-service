@@ -102,11 +102,12 @@ public class ChatService {
         }
         redisService.pushUserChatRoom(chatEnterDto.getUserId(), chatEnterDto.getRoomId());
         redisService.roomCreateTime(chatEnterDto.getRoomId(), chatEnterDto.getUserId());
-        String redisValue = redisService.getValues(key); //이미 참가한 roomId
+        String redisValue = redisService.getValues(key); // 이미 참가하고 있는 roomId
         log.info("redis Value :: {}", redisValue);
-        boolean b = redisValue.equals(String.valueOf(chatEnterDto.getRoomId()));
+
+        boolean alreadyJoined = redisValue.equals(String.valueOf(chatEnterDto.getRoomId()));
         ChatroomUsers joinedUserInfo = usersRepository.findChatroomUsersByChatroomIdAndUserId(Long.valueOf(redisValue), chatroomUsersByUserId.getUserId());
-        if (!b && joinedUserInfo.getSocketFlag() > 3) {
+        if (!alreadyJoined && joinedUserInfo.getSocketFlag() > 3) {
             throw new CustomException(CustomError.CHATROOM_USER_ALREADY_JOINED);
         }
     }

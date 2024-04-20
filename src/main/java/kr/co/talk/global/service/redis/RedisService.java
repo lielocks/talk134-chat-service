@@ -266,7 +266,7 @@ public class RedisService {
 
     public boolean findChatRoomTime(long roomId) {
         String timeKey = roomId + RedisConstants.TIME;
-        return stringRedisTemplate.hasKey(timeKey);
+        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(timeKey));
     }
 
     public boolean isWithin24Hours(long roomId, long userId) {

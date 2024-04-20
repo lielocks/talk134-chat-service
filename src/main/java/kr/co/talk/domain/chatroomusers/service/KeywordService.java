@@ -125,6 +125,7 @@ public class KeywordService {
         Long countValue = redisService.setQuestionCode(listDto.getUserId(), listDto.getRoomId(), listDto);
         List<ChatroomUsers> users = usersRepository.findChatroomUsersByChatroom_ChatroomId(listDto.getRoomId());
         registered = users.size() == countValue;
+
         ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(listDto.getRoomId(), listDto.getUserId());
         user.setSocketFlag(5);
         usersRepository.save(user);
@@ -140,16 +141,17 @@ public class KeywordService {
 
     public Integer setUserStatusMap(long userId) {
         String imgCode = userClient.getUserImgCode(userId);
-        if (imgCode.equals("ng")) {
-            return 1;
-        } else if (imgCode.equals("sp")) {
-            return 2;
-        } else if (imgCode.equals("ha")) {
-            return 3;
-        } else if (imgCode.equals("fu")) {
-            return 4;
-        } else if (imgCode.equals("bl")) {
-            return 5;
+        switch (imgCode) {
+            case "ng":
+                return 1;
+            case "sp":
+                return 2;
+            case "ha":
+                return 3;
+            case "fu":
+                return 4;
+            case "bl":
+                return 5;
         }
         return 0;
     }

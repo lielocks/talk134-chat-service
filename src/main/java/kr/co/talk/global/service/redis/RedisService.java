@@ -134,6 +134,7 @@ public class RedisService {
     public void pushQuestionList(long roomId, long userId, KeywordSetDto keywordSetDto) {
         try {
             String key = roomId + "_" + userId + RedisConstants.QUESTION;
+
             if (getValues(key) == null || getValues(key).isEmpty()) {
                 int count = keywordSetDto.getRegisteredQuestionOrder();
                 count += 1;

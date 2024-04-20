@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -52,29 +54,39 @@ public class KeywordService {
         ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(keywordSendDto.getRoomId(), keywordSendDto.getUserId());
         user.setSocketFlag(4);
 
-        List<SocketFlagResponseDto.TopicListDto> topicListDtoList = new ArrayList<>();
-        for (int i = 0; i < keywordCode.size(); i++ ) {
-            SocketFlagResponseDto.TopicListDto dto = SocketFlagResponseDto.TopicListDto.builder().keywordId(keywordCode.get(i)).keywordName(keywordRepository.findByKeywordId(keywordCode.get(i)).getName())
-                    .questionId(questionCode.get(i)).questionName(questionRepository.findByQuestionId(questionCode.get(i)).getContent()).depth(convertIdIntoDepth(questionCode.get(i))).build();
-            topicListDtoList.add(dto);
-        }
+        List<SocketFlagResponseDto.TopicListDto> topicListDtoList = IntStream.range(0, keywordCode.size())
+                .mapToObj(i -> {
+                    Long keywordId = keywordCode.get(i);
+                    String keywordName = keywordRepository.findByKeywordId(keywordId).getName();
+                    Long questionId = questionCode.get(i);
+                    String questionName = questionRepository.findByQuestionId(questionId).getContent();
+                    String depth = convertIdIntoDepth(questionId);
+
+                    return SocketFlagResponseDto.TopicListDto.builder().keywordId(keywordId).keywordName(keywordName).questionId(questionId).questionName(questionName).depth(depth).build();
+
+                }).collect(Collectors.toList());
 
         usersRepository.save(user);
+
         return SocketFlagResponseDto.builder().topicList(topicListDtoList).socketFlag(4).build();
     }
 
     public List<TopicListDto> sendTopicList(TopicListRedisDto listDto) {
         List<Long> keywordCode = listDto.getKeywordList();
         List<Long> questionCode = listDto.getQuestionList();
-        List<TopicListDto> responseDto = new ArrayList<>();
 
-        for (int i = 0; i < keywordCode.size(); i++ ) {
-            TopicListDto dto = TopicListDto.builder().keywordId(keywordCode.get(i)).keywordName(keywordRepository.findByKeywordId(keywordCode.get(i)).getName())
-                    .questionId(questionCode.get(i)).questionName(questionRepository.findByQuestionId(questionCode.get(i)).getContent()).depth(convertIdIntoDepth(questionCode.get(i))).build();
-            responseDto.add(dto);
-        }
+        return IntStream.range(0, keywordCode.size())
+                .mapToObj(i -> {
+                    Long keywordId = keywordCode.get(i);
+                    Long questionId = questionCode.get(i);
+                    String keywordName = keywordRepository.findByKeywordId(keywordId).getName();
+                    String questionName = questionRepository.findByQuestionId(questionId).getContent();
+                    String depth = convertIdIntoDepth(questionId);
 
-        return responseDto;
+                    return TopicListDto.builder().keywordId(keywordId).keywordName(keywordName).questionId(questionId).questionName(questionName).depth(depth).build();
+
+                })
+                .collect(Collectors.toList());
     }
 
     private void setUserQuestionList (long userId, List<Long> keywordCode, List<TopicListDto> responseDto, boolean existingRoom) {
@@ -115,7 +127,8 @@ public class KeywordService {
 
     public AllRegisteredDto setQuestionOrder(QuestionCodeDto listDto) {
         boolean registered;
-        List<Long> questionCode = redisService.findQuestionCode(listDto.getRoomId(), listDto.getUserId());
+        // HashSet 으로 중복된 요소 제거 후 contains 돌리기
+        HashSet<Long> questionCode = new HashSet<>(redisService.findQuestionCode(listDto.getRoomId(), listDto.getUserId()));
 
         if (!questionCode.containsAll(listDto.getQuestionCodeList())) {
             throw new CustomException(CustomError.QUESTION_ID_NOT_MATCHED);
@@ -125,6 +138,7 @@ public class KeywordService {
         Long countValue = redisService.setQuestionCode(listDto.getUserId(), listDto.getRoomId(), listDto);
         List<ChatroomUsers> users = usersRepository.findChatroomUsersByChatroom_ChatroomId(listDto.getRoomId());
         registered = users.size() == countValue;
+
         ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(listDto.getRoomId(), listDto.getUserId());
         user.setSocketFlag(5);
         usersRepository.save(user);
@@ -140,16 +154,17 @@ public class KeywordService {
 
     public Integer setUserStatusMap(long userId) {
         String imgCode = userClient.getUserImgCode(userId);
-        if (imgCode.equals("ng")) {
-            return 1;
-        } else if (imgCode.equals("sp")) {
-            return 2;
-        } else if (imgCode.equals("ha")) {
-            return 3;
-        } else if (imgCode.equals("fu")) {
-            return 4;
-        } else if (imgCode.equals("bl")) {
-            return 5;
+        switch (imgCode) {
+            case "ng":
+                return 1;
+            case "sp":
+                return 2;
+            case "ha":
+                return 3;
+            case "fu":
+                return 4;
+            case "bl":
+                return 5;
         }
         return 0;
     }

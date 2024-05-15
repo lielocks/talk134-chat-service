@@ -184,10 +184,6 @@ public class ChatService {
         user.activeFlagOn(false);
     }
 
-    public boolean userStatus(long userId, long roomId) {
-        ChatroomUsers user = usersRepository.findChatroomUsersByChatroomIdAndUserId(roomId, userId);
-        return user.isActiveFlag();
-    }
 
     private boolean allChatroomUsersActive(List<ChatroomUsers> chatroomUsers) {
         return chatroomUsers.stream().allMatch(ChatroomUsers::isActiveFlag);

@@ -51,13 +51,16 @@ public class SocketEventListener {
             sessionMap.remove(headerAccessor.getSessionId());
         }
 
-        Optional<Object> userIdOpt = Optional.ofNullable(headerAccessor.getSessionAttributes().get("userId"));
-        Optional<Object> roomIdOpt = Optional.ofNullable(headerAccessor.getSessionAttributes().get("roomId"));
-        if (userIdOpt.isPresent() && roomIdOpt.isPresent()) {
-            long userId = (Long) userIdOpt.get();
-            long roomId = (Long) roomIdOpt.get();
+        long userId = Optional.ofNullable((Long) headerAccessor.getSessionAttributes().get("userId"))
+                .map(Long.class::cast)
+                .orElse(-1L);
+
+        long roomId = Optional.ofNullable((Long) headerAccessor.getSessionAttributes().get("roomId"))
+                .map(Long.class::cast)
+                .orElse(-1L);
+
+        if (userId != -1L && roomId != -1L) {
             chatService.disconnectUserSetFalse(userId, roomId);
-            log.info("verify the user changed to false :: {}", chatService.userStatus(userId, roomId));
         }
 
         log.info("Web socket session closed. Message : [{}]", event.getMessage());

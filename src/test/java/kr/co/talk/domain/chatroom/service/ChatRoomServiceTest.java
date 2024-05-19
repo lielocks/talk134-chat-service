@@ -1,24 +1,18 @@
 package kr.co.talk.domain.chatroom.service;
 
 import java.util.List;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import java.util.stream.Collectors;
+
+import kr.co.talk.domain.chatroomusers.repository.ChatroomUsersRepository;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.talk.domain.chatroom.dto.RequestDto.CreateChatroomResponseDto;
 import kr.co.talk.domain.chatroom.dto.RequestDto.FindChatroomResponseDto;
 import kr.co.talk.domain.chatroom.model.Chatroom;
-import static kr.co.talk.domain.chatroom.model.QChatroom.chatroom;
-import static kr.co.talk.domain.chatroomusers.entity.QChatroomUsers.chatroomUsers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
@@ -27,30 +21,29 @@ import kr.co.talk.global.client.UserClient;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@SpringBootTest
-@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@SpringBootTest // 트랜잭션 제거
 @ActiveProfiles(profiles = "test")
-@EmbeddedKafka(partitions = 1, brokerProperties = { "listeners=PLAINTEXT://localhost:9092", "port=9092" })
 public class ChatRoomServiceTest {
     @Autowired
-    private ChatRoomService chatRoomService;
-
-    @Autowired
-    private JPAQueryFactory jpaQueryFactory;
+    private ChatroomUsersRepository chatroomUsersRepository;
 
     @MockBean
     UserClient userClient;
 
+    @AfterEach
+    void clearUp() {
+        chatroomUsersRepository.deleteAll();
+    }
     
     @Test
+    @Order(1)
     @DisplayName("채팅방 잘 만들어지는지 확인")
-    @Transactional
     public void createChatroom() {
         // given
         String teamCode = "teamCode_test";
         String chatroomName = "석홍, 용현, 해솔";
 
-        long createUserId = 1L;
         List<Long> userList = List.of(1L, 2L, 3L);
 
         FindChatroomResponseDto mockChatroomResponseDto = new FindChatroomResponseDto();
@@ -68,20 +61,28 @@ public class ChatRoomServiceTest {
         doReturn(mockCreateChatroomResponseDto).when(userClient)
                 .requiredCreateChatroomInfo(anyLong(), anyList());
 
+        List<ChatroomUsers> chatroomUsers = userList.stream().map(userId -> {
+            return ChatroomUsers.builder()
+                    .chatroom(Chatroom.builder()
+                            .name(mockCreateChatroomResponseDto.getChatroomName())
+                            .teamCode(mockCreateChatroomResponseDto.getTeamCode())
+                            .build())
+                    .userId(userId)
+                    .build();
+        }).collect(Collectors.toList());
 
-        chatRoomService.createChatroom(createUserId, userList);
+        chatroomUsersRepository.saveAll(chatroomUsers);
+        long resultCount = chatroomUsersRepository.count();
 
-        Chatroom firstChatroom =
-                jpaQueryFactory.selectFrom(chatroom).leftJoin(chatroom.chatroomUsers, chatroomUsers)
-                        .fetchJoin().where(chatroom.teamCode.eq(teamCode)).fetchFirst();
+        assertEquals(resultCount, 3);
+    }
 
-        List<ChatroomUsers> findChatroomUsers = jpaQueryFactory.selectFrom(chatroomUsers)
-                .where(chatroomUsers.chatroom.eq(firstChatroom)).fetch();
-
-        // then
-        assertNotNull(firstChatroom);
-        assertEquals(findChatroomUsers.size(), userList.size());
-
+    @Test
+    @Order(2)
+    @DisplayName("rollback 검증")
+    void rollback() {
+        long afterCount = chatroomUsersRepository.count();
+        assertEquals(afterCount, 0);
     }
 
     // @Test

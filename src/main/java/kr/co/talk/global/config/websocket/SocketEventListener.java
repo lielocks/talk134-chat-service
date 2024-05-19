@@ -13,7 +13,6 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -45,24 +44,17 @@ public class SocketEventListener {
     @EventListener
     public void handleWebSocketDisConnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
 
         String sessionId = findBrowserSessionId(headerAccessor.getSessionId());
+
         if(sessionId != null) {
             sessionMap.remove(headerAccessor.getSessionId());
         }
 
-        long userId = Optional.ofNullable((Long) headerAccessor.getSessionAttributes().get("userId"))
-                .map(Long.class::cast)
-                .orElse(-1L);
-
-        long roomId = Optional.ofNullable((Long) headerAccessor.getSessionAttributes().get("roomId"))
-                .map(Long.class::cast)
-                .orElse(-1L);
-
-        if (userId != -1L && roomId != -1L) {
-            chatService.disconnectUserSetFalse(userId, roomId);
+        if (sessionAttributes.get("userId") != null && sessionAttributes.get("roomId") != null) {
+            chatService.disconnectUserSetFalse((Long) sessionAttributes.get("userId"), (Long) sessionAttributes.get("roomId"));
         }
-
         log.info("Web socket session closed. Message : [{}]", event.getMessage());
     }
 
@@ -90,7 +82,6 @@ public class SocketEventListener {
         headerAccessor.getSessionAttributes().put("roomId", roomId);
         headerAccessor.setLeaveMutable(true);
 
-        log.info("Header Accessor log info :: {}", headerAccessor.getSessionAttributes());
         return headerAccessor.getMessageHeaders();
     }
 

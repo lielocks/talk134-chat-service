@@ -1,7 +1,5 @@
 package kr.co.talk.global.kafka;
 
-import kr.co.talk.global.kafka.helper.ConsumerRecordsHelper;
-import kr.co.talk.global.kafka.helper.KafkaConsumerTestHelper;
 import kr.co.talk.global.kafka.helper.annotation.TriplePartitionKafkaTest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
